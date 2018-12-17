@@ -203,6 +203,29 @@ defmodule Matrix do
   end
 
   @doc """
+  Transpose of matrix.
+
+  Returns result, it means either tuple of {:ok, matrix} or {:error, "msg"}.
+
+  ##  Example:
+
+      iex> mat = {:ok, [[1,2,3], [4,5,6], [7,8,9]]}
+      iex> mat |> Result.map(&Matrix.transpose(&1))
+      {:ok,
+        [
+          [1, 4, 7],
+          [2, 5, 8],
+          [3, 6, 9]
+        ]
+      }
+
+  """
+  @spec transpose(matrix) :: Result.t(String.t(), matrix)
+  def transpose(matrix) do
+    make_transpose(matrix)
+  end
+
+  @doc """
   The size (dimensions) of the matrix.
 
   Returns tuple of {row_size, col_size}.
@@ -275,6 +298,12 @@ defmodule Matrix do
         row
       end
     end)
+  end
+
+  defp make_transpose([[] | _]), do: []
+
+  defp make_transpose(matrix) do
+    [Enum.map(matrix, &hd/1) | make_transpose(Enum.map(matrix, &tl/1))]
   end
 
   defp and_then2({:ok, val1}, {:ok, val2}, f) when is_function(f, 2) do
