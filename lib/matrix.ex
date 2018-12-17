@@ -4,11 +4,11 @@ defmodule Matrix do
   """
   alias Vector
 
-  @type row :: Vector.vector()
-  @type matrix :: [row]
+  @type vector :: Vector.vector()
+  @type matrix :: [vector]
   @type dimension :: {pos_integer, pos_integer} | pos_integer
   @type index :: {non_neg_integer, non_neg_integer}
-  @type element :: number | row | matrix
+  @type element :: number | vector | matrix
 
   @doc """
   Create a new matrix of the specified size (number of rows and columns).
@@ -56,16 +56,15 @@ defmodule Matrix do
 
   @doc """
   Updates the matrix by given a submatrix. The position of submatrix inside matrix
-  is given by two indexes `{from_row, from_col}` and `{to_row, to_col}`. These
-  indexes must reflect the size of submatrix. Size of submatrix must be less than
-  or equal to size of matrix. Otherwise (in both cases) you get error message.
-  The values of indexes start from 0 to (matrix row size - 1). Similarly for col size.
+  is given by index `{from_row, from_col}` and dimension of submatrix. Size of
+  submatrix must be less than or equal to size of matrix. Otherwise you get error message.
+  The values of indices start from 0 to (matrix row size - 1). Similarly for col size.
 
   Returns result, it means either tuple of {:ok, matrix} or {:error, "msg"}.
 
   ##  Example:
 
-      iex> Matrix.new(4) |> Result.and_then(&Matrix.update(&1, {1,2}, {2,3}, [[1,2],[3,4]]))
+      iex> Matrix.new(4) |> Result.and_then(&Matrix.update(&1, [[1,2],[3,4]], {1,2}))
       {:ok,
         [
           [0, 0, 0, 0],
@@ -76,24 +75,24 @@ defmodule Matrix do
       }
 
   """
-  @spec update(matrix, index, index, element) :: Result.t(String.t(), matrix)
-  def update(matrix, index1, index2, submatrix) do
+  @spec update(matrix, element, index) :: Result.t(String.t(), matrix)
+  def update(matrix, submatrix, index) do
     matrix
-    |> are_indexes_same_as_size_of_submatrix?(index1, index2, submatrix)
+    |> is_possible_insert_submatrix_on_position?(submatrix, index)
     |> Result.and_then(&is_possible_insert_submatrix_to_matrix?(&1, submatrix))
-    |> Result.map(&make_update(&1, index1, index2, submatrix))
+    |> Result.map(&make_update(&1, submatrix, index))
   end
 
   @doc """
   Updates the matrix by given a number. The position of element in matrix
-  which you want to change is given by two positive integers. These numbers
+  which you want to change is given by two non negative integers. These numbers
   must be from 0 to (matrix row size - 1). Similarly for col size.
 
   Returns result, it means either tuple of {:ok, matrix} or {:error, "msg"}.
 
   ##  Example:
 
-      iex> Matrix.new(3) |> Result.and_then(&Matrix.update_element(&1, 1, 1, -1))
+      iex> Matrix.new(3) |> Result.and_then(&Matrix.update_element(&1, -1, 1, 1))
       {:ok,
         [
           [0, 0, 0],
@@ -103,51 +102,49 @@ defmodule Matrix do
       }
 
   """
-  @spec update_element(matrix, non_neg_integer, non_neg_integer, number) ::
+  @spec update_element(matrix, number, non_neg_integer, non_neg_integer) ::
           Result.t(String.t(), matrix)
-  def update_element(matrix, row, col, el) when is_number(el) do
-    update(matrix, {row, col}, {row, col}, [[el]])
+  def update_element(matrix, el, row, col) when is_number(el) do
+    update(matrix, [[el]], {row, col})
   end
 
   @doc """
-  Updates row in the matrix by given a vector (list) of numbers. The row which
-  you want to change is given by positive integer (from 0 to (matrix row size - 1)),
-  by tuple `{from_col, to_col}` and by list of values. Values of tuple must reflect
-  the size of list. Otherwise you get error message.
+  Updates row in the matrix by given a row vector (list) of numbers. The row and
+  columns which you want to change is given by tuple `{row, col}`. Both values
+  are non negative integers.
 
   Returns result, it means either tuple of {:ok, matrix} or {:error, "msg"}.
 
   ##  Example:
 
       iex> {:ok, mat} = Matrix.new(4)
-      iex> Matrix.update_row(mat, 3, {0, 2}, [1, 2, 3])
+      iex> Matrix.update_row(mat, [1, 2, 3], {3, 1})
       {:ok,
         [
           [0, 0, 0, 0],
           [0, 0, 0, 0],
           [0, 0, 0, 0],
-          [1, 2, 3, 0]
+          [0, 1, 2, 3]
         ]
       }
 
   """
-  @spec update_row(matrix, non_neg_integer, index, element) :: Result.t(String.t(), matrix)
-  def update_row(matrix, row, {from_col, to_col}, submatrix) do
-    update(matrix, {row, from_col}, {row, to_col}, [submatrix])
+  @spec update_row(matrix, element, index) :: Result.t(String.t(), matrix)
+  def update_row(matrix, submatrix, index) do
+    update(matrix, [submatrix], index)
   end
 
   @doc """
-  Updates column in the matrix by given a vector (list) of numbers. The column which
-  you want to change is given by positive integer (from 0 to (matrix col size - 1)),
-  by tuple `{from_row, to_row}` and by list of values. Values of tuple must reflect
-  the size of list. Otherwise you get error message.
+  Updates column in the matrix by given a column vector (list) of numbers.
+  The column and rows which you want to change is given by tuple `{row, col}`.
+  Both values are non negative integers.
 
   Returns result, it means either tuple of {:ok, matrix} or {:error, "msg"}.
 
   ##  Example:
 
       iex> {:ok, mat} = Matrix.new(4)
-      iex> Matrix.update_col(mat, 1, {0, 2}, [[1], [2], [3]])
+      iex> Matrix.update_col(mat, [[1], [2], [3]], {0, 1})
       {:ok,
         [
           [0, 1, 0, 0],
@@ -158,9 +155,9 @@ defmodule Matrix do
       }
 
   """
-  @spec update_col(matrix, non_neg_integer, index, element) :: Result.t(String.t(), matrix)
-  def update_col(matrix, col, {from_row, to_row}, submatrix) do
-    update(matrix, {from_row, col}, {to_row, col}, submatrix)
+  @spec update_col(matrix, element, index) :: Result.t(String.t(), matrix)
+  def update_col(matrix, submatrix, index) do
+    update(matrix, submatrix, index)
   end
 
   @doc """
@@ -176,7 +173,7 @@ defmodule Matrix do
       iex> mat = Matrix.new(5)
       iex> sub_mat = Matrix.new(2,1)
       iex> positions = [{0,0}, {3, 3}]
-      iex> Matrix.update_map(mat, positions, sub_mat)
+      iex> Matrix.update_map(mat, sub_mat, positions)
       {:ok,
         [
           [1, 1, 0, 0, 0],
@@ -188,16 +185,16 @@ defmodule Matrix do
       }
 
   """
-  @spec update_map(matrix, list(index), {:ok, element}) :: Result.t(String.t(), matrix)
-  def update_map(matrix, positions, submatrix) do
+  @spec update_map(matrix, element, list(index)) :: Result.t(String.t(), matrix)
+  def update_map(matrix, submatrix, positions) do
     {row, col, check_size} = and_then2(matrix, submatrix, &check_size(&1, &2, positions))
 
     if check_size do
-      Enum.reduce(positions, matrix, fn {row_pos, col_pos}, acc ->
+      Enum.reduce(positions, matrix, fn position, acc ->
         and_then2(
           acc,
           submatrix,
-          &update(&1, {row_pos, col_pos}, {row_pos + row - 1, col_pos + col - 1}, &2)
+          &update(&1, &2, position)
         )
       end)
     else
@@ -222,23 +219,24 @@ defmodule Matrix do
   defp make_row(0, _val), do: []
   defp make_row(n, val), do: [val] ++ make_row(n - 1, val)
 
-  defp are_indexes_same_as_size_of_submatrix?(
+  defp is_possible_insert_submatrix_on_position?(
          matrix,
-         {from_row, from_col},
-         {to_row, to_col},
-         submatrix
+         submatrix,
+         {from_row, from_col}
        ) do
-    {row_size, col_size} = size(submatrix)
-    calculated_row_size = to_row - from_row + 1
-    calculated_col_size = to_col - from_col + 1
+    {row_size, col_size} = size(matrix)
+    {row_size_sub, col_size_sub} = size(submatrix)
 
-    if calculated_row_size == row_size and calculated_col_size == col_size do
+    calculated_row_size = from_row + row_size_sub
+    calculated_col_size = from_col + col_size_sub
+
+    if calculated_row_size <= row_size and calculated_col_size <= col_size do
       Result.ok(matrix)
     else
       Result.error(
-        "Size {#{row_size}, #{col_size}} of submatrix is different from calculated indices {#{
-          calculated_row_size
-        }, #{calculated_col_size}}!"
+        "On given position {#{from_row}, #{from_col}} you can not insert the submatrix size of {#{
+          row_size_sub
+        }, #{col_size_sub}}.A part of submatrix would be outside of matrix!"
       )
     end
   end
@@ -257,15 +255,17 @@ defmodule Matrix do
     end
   end
 
-  defp make_update(matrix, {from_row, from_col}, {to_row, to_col}, submatrix) do
+  defp make_update(matrix, submatrix, {from_row, from_col}) do
+    {to_row, to_col} = size(submatrix)
+
     matrix
     |> Enum.with_index()
     |> Enum.map(fn {row, i} ->
-      if i in from_row..to_row do
+      if i in from_row..(from_row + to_row - 1) do
         row
         |> Enum.with_index()
         |> Enum.map(fn {_col, j} ->
-          if j in from_col..to_col do
+          if j in from_col..(from_col + to_col - 1) do
             submatrix |> Enum.at(i - from_row) |> Enum.at(j - from_col)
           else
             Enum.at(row, j)
