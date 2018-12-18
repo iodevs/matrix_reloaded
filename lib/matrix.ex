@@ -2,6 +2,7 @@ defmodule Matrix do
   @moduledoc """
   Provides a set of functions to work with matrices.
   """
+  alias Vector
 
   @type vector :: Vector.t()
   @type t :: [Vector.t()]
@@ -51,6 +52,43 @@ defmodule Matrix do
 
   def new(_rows, _val) do
     Result.error("It is not possible create square matrix with negative row or column!")
+  end
+
+  @doc """
+  Addition of two matrices. Sizes (dimensions) of both matrices must be same.
+  Otherwise you get error message.
+
+  Returns result, it means either tuple of {:ok, matrix} or {:error, "msg"}.
+
+  ## Examples
+
+      iex> mat1 = {:ok, [[1, 2, 3], [4, 5, 6], [7, 8, 9]]}
+      iex> mat2 = Matrix.new(3,1)
+      iex> Matrix.and_then2(mat1, mat2, &Matrix.add(&1, &2))
+      {:ok,
+        [
+          [2, 3, 4],
+          [5, 6, 7],
+          [8, 9, 10]
+        ]
+      }
+
+  """
+  @spec add(Matrix.t(), Matrix.t()) :: Result.t(String.t(), Matrix.t())
+  def add(matrix1, matrix2) do
+    {rs1, cs1} = size(matrix1)
+    {rs2, cs2} = size(matrix2)
+
+    if rs1 == rs2 and cs1 == cs2 do
+      matrix1
+      |> Enum.zip(matrix2)
+      |> Enum.map(fn {row1, row2} ->
+        Vector.add(row1, row2)
+      end)
+      |> Result.product()
+    else
+      Result.error("Sizes (dimensions) of both matrices must be same!")
+    end
   end
 
   @doc """
@@ -346,6 +384,13 @@ defmodule Matrix do
   @spec size(Matrix.t()) :: {pos_integer, pos_integer}
   def size(matrix), do: {length(matrix), length(List.first(matrix))}
 
+  def and_then2({:ok, val1}, {:ok, val2}, f) when is_function(f, 2) do
+    f.(val1, val2)
+  end
+
+  def and_then2({:error, _} = result, _, _f), do: result
+  def and_then2(_, {:error, _} = result, _f), do: result
+
   defp make_row(0, _val), do: []
   defp make_row(n, val), do: [val] ++ make_row(n - 1, val)
 
@@ -412,13 +457,6 @@ defmodule Matrix do
   defp make_transpose(matrix) do
     [Enum.map(matrix, &hd/1) | make_transpose(Enum.map(matrix, &tl/1))]
   end
-
-  defp and_then2({:ok, val1}, {:ok, val2}, f) when is_function(f, 2) do
-    f.(val1, val2)
-  end
-
-  defp and_then2({:error, _} = result, _, _f), do: result
-  defp and_then2(_, {:error, _} = result, _f), do: result
 
   defp check_size(matrix, submatrix, positions) do
     {rm, cm} = size(matrix)
