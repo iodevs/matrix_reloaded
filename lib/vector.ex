@@ -3,7 +3,7 @@ defmodule Vector do
   Provides a set of functions to work with vectors.
   """
 
-  @type vector :: list(number)
+  @type t :: list(number)
 
   @doc """
   Create a row vector of the specified size. Default values of vector
@@ -21,7 +21,7 @@ defmodule Vector do
 
   """
 
-  @spec row(pos_integer, number) :: vector()
+  @spec row(pos_integer, number) :: Vector.t()
   def row(size, val \\ 0) do
     List.duplicate(val, size)
   end
@@ -42,7 +42,7 @@ defmodule Vector do
 
   """
 
-  @spec col(pos_integer, number) :: [vector()]
+  @spec col(pos_integer, number) :: [Vector.t()]
   def col(size, val \\ 0) do
     val |> List.duplicate(size) |> Enum.chunk_every(1)
   end
@@ -59,7 +59,7 @@ defmodule Vector do
       [1, 2, 3]
 
   """
-  @spec transpose(vector) :: vector()
+  @spec transpose(Vector.t()) :: Vector.t()
   def transpose([hd | _] = vec) when is_list(hd) do
     List.flatten(vec)
   end
@@ -81,7 +81,7 @@ defmodule Vector do
 
   """
 
-  @spec alternate_seq(vector, number, pos_integer) :: vector()
+  @spec alternate_seq(Vector.t(), number, pos_integer) :: Vector.t()
   def alternate_seq(vec, val, step \\ 2) do
     Enum.map_every(vec, step, fn x -> x + val end)
   end
@@ -99,7 +99,7 @@ defmodule Vector do
 
   """
 
-  @spec add(vector, vector) :: Result.t(String.t(), vector())
+  @spec add(Vector.t(), Vector.t()) :: Result.t(String.t(), Vector.t())
   def add(vec1, vec2) do
     if size(vec1) == size(vec2) do
       [vec1, vec2]
@@ -124,7 +124,7 @@ defmodule Vector do
 
   """
 
-  @spec sub(vector, vector) :: Result.t(String.t(), vector())
+  @spec sub(Vector.t(), Vector.t()) :: Result.t(String.t(), Vector.t())
   def sub(vec1, vec2) do
     if size(vec1) == size(vec2) do
       [vec1, vec2]
@@ -149,7 +149,7 @@ defmodule Vector do
 
   """
 
-  @spec dot(vector, vector) :: Result.t(String.t(), number)
+  @spec dot(Vector.t(), Vector.t()) :: Result.t(String.t(), number)
   def dot(vec1, vec2) do
     if size(vec1) == size(vec2) do
       [vec1, vec2]
@@ -172,7 +172,7 @@ defmodule Vector do
 
   """
 
-  @spec mult_by_num(vector, number) :: vector()
+  @spec mult_by_num(Vector.t(), number) :: Vector.t()
   def mult_by_num(vec, val) do
     Enum.map(vec, fn x -> x * val end)
   end
@@ -191,6 +191,6 @@ defmodule Vector do
       4
 
   """
-  @spec size(vector) :: non_neg_integer
+  @spec size(Vector.t()) :: non_neg_integer
   def size(vec), do: length(vec)
 end
