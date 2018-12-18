@@ -2,13 +2,11 @@ defmodule Matrix do
   @moduledoc """
   Provides a set of functions to work with matrices.
   """
-  alias Vector
 
-  @type vector :: Vector.vector()
-  @type matrix :: [vector]
+  @type t :: [Vector.t()]
   @type dimension :: {pos_integer, pos_integer} | pos_integer
   @type index :: {non_neg_integer, non_neg_integer}
-  @type element :: number | vector | matrix
+  @type element :: number | Vector.t() | Matrix.t()
 
   @doc """
   Create a new matrix of the specified size (number of rows and columns).
@@ -27,7 +25,7 @@ defmodule Matrix do
       {:ok, [[-10, -10, -10], [-10, -10, -10]]}
 
   """
-  @spec new(dimension, number) :: Result.t(String.t(), matrix)
+  @spec new(dimension, number) :: Result.t(String.t(), Matrix.t())
   def new(dimension, val \\ 0)
 
   def new({rows, cols}, val) when rows > 0 and cols > 0 do
@@ -75,7 +73,7 @@ defmodule Matrix do
       }
 
   """
-  @spec update(matrix, element, index) :: Result.t(String.t(), matrix)
+  @spec update(Matrix.t(), element, index) :: Result.t(String.t(), Matrix.t())
   def update(matrix, submatrix, index) do
     matrix
     |> is_possible_insert_submatrix_on_position?(submatrix, index)
@@ -102,8 +100,8 @@ defmodule Matrix do
       }
 
   """
-  @spec update_element(matrix, number, non_neg_integer, non_neg_integer) ::
-          Result.t(String.t(), matrix)
+  @spec update_element(Matrix.t(), number, non_neg_integer, non_neg_integer) ::
+          Result.t(String.t(), Matrix.t())
   def update_element(matrix, el, row, col) when is_number(el) do
     update(matrix, [[el]], {row, col})
   end
@@ -129,7 +127,7 @@ defmodule Matrix do
       }
 
   """
-  @spec update_row(matrix, element, index) :: Result.t(String.t(), matrix)
+  @spec update_row(Matrix.t(), element, index) :: Result.t(String.t(), Matrix.t())
   def update_row(matrix, submatrix, index) do
     update(matrix, [submatrix], index)
   end
@@ -155,7 +153,7 @@ defmodule Matrix do
       }
 
   """
-  @spec update_col(matrix, element, index) :: Result.t(String.t(), matrix)
+  @spec update_col(Matrix.t(), element, index) :: Result.t(String.t(), Matrix.t())
   def update_col(matrix, submatrix, index) do
     update(matrix, submatrix, index)
   end
@@ -185,7 +183,7 @@ defmodule Matrix do
       }
 
   """
-  @spec update_map(matrix, element, list(index)) :: Result.t(String.t(), matrix)
+  @spec update_map(Matrix.t(), element, list(index)) :: Result.t(String.t(), Matrix.t())
   def update_map(matrix, submatrix, positions) do
     {row, col, check_size} = and_then2(matrix, submatrix, &check_size(&1, &2, positions))
 
@@ -220,7 +218,7 @@ defmodule Matrix do
       }
 
   """
-  @spec transpose(matrix) :: Result.t(String.t(), matrix)
+  @spec transpose(Matrix.t()) :: Matrix.t()
   def transpose(matrix) do
     make_transpose(matrix)
   end
@@ -236,7 +234,7 @@ defmodule Matrix do
       {3, 4}
 
   """
-  @spec size(matrix) :: {pos_integer, pos_integer}
+  @spec size(Matrix.t()) :: {pos_integer, pos_integer}
   def size(matrix), do: {length(matrix), length(List.first(matrix))}
 
   defp make_row(0, _val), do: []
