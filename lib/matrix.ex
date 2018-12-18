@@ -283,6 +283,56 @@ defmodule Matrix do
   end
 
   @doc """
+  Flip columns of matrix in the left-right direction (i.e. about a vertical axis).
+
+  Returns result, it means either tuple of {:ok, matrix} or {:error, "msg"}.
+
+  ##  Example:
+
+      iex> mat = {:ok, [[1,2,3], [4,5,6], [7,8,9]]}
+      iex> mat |> Result.and_then(&Matrix.flip_lr(&1))
+      {:ok,
+        [
+          [3, 2, 1],
+          [6, 5, 4],
+          [9, 8, 7]
+        ]
+      }
+
+  """
+  @spec flip_lr(Matrix.t()) :: Result.t(String.t(), Matrix.t())
+  def flip_lr(matrix) do
+    matrix
+    |> Enum.map(fn row -> Enum.reverse(row) end)
+    |> Result.ok()
+  end
+
+  @doc """
+  Flip rows of matrix in the up-down direction (i.e. about a horizontal axis).
+
+  Returns result, it means either tuple of {:ok, matrix} or {:error, "msg"}.
+
+  ##  Example:
+
+      iex> mat = {:ok, [[1,2,3], [4,5,6], [7,8,9]]}
+      iex> mat |> Result.and_then(&Matrix.flip_ud(&1))
+      {:ok,
+        [
+          [7, 8, 9],
+          [4, 5, 6],
+          [1, 2, 3]
+        ]
+      }
+
+  """
+  @spec flip_ud(Matrix.t()) :: Result.t(String.t(), Matrix.t())
+  def flip_ud(matrix) do
+    matrix
+    |> Enum.reverse()
+    |> Result.ok()
+  end
+
+  @doc """
   The size (dimensions) of the matrix.
 
   Returns tuple of {row_size, col_size}.
