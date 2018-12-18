@@ -240,6 +240,55 @@ defmodule Matrix do
   end
 
   @doc """
+  Get a submatrix from the matrix. By index you can select a submatrix. Dimension of
+  submatrix is given by positive number (result then will be square matrix) or tuple
+  of two positive numbers (you get then a rectangular matrix).
+
+  Returns result, it means either tuple of {:ok, matrix} or {:error, "msg"}.
+
+  ##  Example:
+
+      iex> mat = {:ok,
+        [
+          [0, 0, 0, 0],
+          [0, 0, 1, 2],
+          [0, 0, 3, 4],
+          [0, 0, 0, 0]
+          ]
+        }
+      iex> mat |> Result.and_then(&Matrix.get_submatrix(&1, {1, 2}, 2))
+      {:ok,
+        [
+          [1, 2],
+          [3, 4]
+        ]
+      }
+
+      iex> mat = {:ok,
+        [
+          [0, 0, 0, 0],
+          [0, 0, 0, 0],
+          [0, 1, 2, 3],
+          [0, 4, 5, 6]
+          ]
+        }
+      iex> Matrix.new(4) |> Result.and_then(&Matrix.get_submatrix(&1, {2, 1}, {3, 3}))
+      {:ok,
+        [
+          [1, 2, 3],
+          [4, 5, 6]
+        ]
+      }
+
+  """
+  @spec get_submatrix(Matrix.t(), index, dimension) :: Result.t(String.t(), Matrix.t())
+  def get_submatrix(matrix, index, dim) do
+    matrix
+    |> is_possible_get_submatrix_on_position?(index, dim)
+    |> Result.map(&make_get_submatrix(&1, index, dim))
+  end
+
+  @doc """
   Creates a square diagonal matrix with the elements of vector on the main diagonal
   or on lower/upper bidiagonal if diagonal number `k` is k < 0 or 0 < k. This number
   must be integer.
@@ -411,7 +460,7 @@ defmodule Matrix do
       Result.error(
         "On given position {#{from_row}, #{from_col}} you can not insert the submatrix size of {#{
           row_size_sub
-        }, #{col_size_sub}}.A part of submatrix would be outside of matrix!"
+        }, #{col_size_sub}}. A part of submatrix would be outside of matrix!"
       )
     end
   end
@@ -428,6 +477,44 @@ defmodule Matrix do
     else
       Result.error("Size of submatrix is bigger than size of matrix!")
     end
+  end
+
+  defp is_possible_get_submatrix_on_position?(matrix, {from_row, from_col}, {to_row, to_col}) do
+    {row_size, col_size} = size(matrix)
+
+    calculated_row_size = to_row - from_row + 1
+    calculated_col_size = to_col - from_col + 1
+
+    if calculated_row_size < row_size and calculated_col_size < col_size do
+      Result.ok(matrix)
+    else
+      Result.error(
+        "On given position {#{from_row}, #{from_col}} you can not get the submatrix size of {#{
+          calculated_row_size
+        }, #{calculated_col_size}}. A part of submatrix is outside of matrix!"
+      )
+    end
+  end
+
+  defp is_possible_get_submatrix_on_position?(matrix, {from_row, from_col}, dim) when 0 < dim do
+    {row_size, col_size} = size(matrix)
+
+    calculated_row_size = dim + from_row
+    calculated_col_size = dim + from_col
+
+    if calculated_row_size <= row_size and calculated_col_size <= col_size do
+      Result.ok(matrix)
+    else
+      Result.error(
+        "On given position {#{from_row}, #{from_col}} you can not get the submatrix size of {#{
+          dim
+        }, #{dim}}. A part of submatrix is outside of matrix!"
+      )
+    end
+  end
+
+  defp is_possible_get_submatrix_on_position?(_matrix, _index, dim) when dim < 0 do
+    Result.error("Dimension must be positive number!")
   end
 
   defp make_update(matrix, submatrix, {from_row, from_col}) do
@@ -450,6 +537,13 @@ defmodule Matrix do
         row
       end
     end)
+  end
+
+  defp make_get_submatrix(matrix, {from_row, from_col}, dim) do
+    {to_row, to_col} = size(matrix)
+
+    dim
+    |> Matrix.new()
   end
 
   defp make_transpose([[] | _]), do: []
