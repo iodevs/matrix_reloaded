@@ -3,10 +3,11 @@ defmodule Matrix do
   Provides a set of functions to work with matrices.
   """
 
+  @type vector :: Vector.t()
   @type t :: [Vector.t()]
   @type dimension :: {pos_integer, pos_integer} | pos_integer
   @type index :: {non_neg_integer, non_neg_integer}
-  @type element :: number | Vector.t() | Matrix.t()
+  @type element :: number | vector | Matrix.t()
 
   @doc """
   Create a new matrix of the specified size (number of rows and columns).
@@ -201,6 +202,62 @@ defmodule Matrix do
   end
 
   @doc """
+  Creates a square diagonal matrix with the elements of vector on the main diagonal
+  or on lower/upper bidiagonal if diagonal number `k` is k < 0 or 0 < k. This number
+  must be integer.
+
+  Returns result, it means either tuple of {:ok, matrix} or {:error, "msg"}.
+
+  ##  Example:
+      iex> Matrix.diag([1, 2, 3])
+      {:ok,
+        [
+          [1, 0, 0],
+          [0, 2, 0],
+          [0, 0, 3]
+        ]
+      }
+      iex> Matrix.diag([1, 2, 3], 1)
+      {:ok,
+        [
+          [0, 1, 0, 0],
+          [0, 0, 2, 0],
+          [0, 0, 0, 3],
+          [0, 0, 0, 0]
+        ]
+      }
+
+  """
+  @spec diag(Vector.t(), integer()) :: Result.t(String.t(), Matrix.t())
+  def diag(vector, k \\ 0)
+
+  def diag(vector, k) when is_list(vector) and is_integer(k) and 0 <= k do
+    len = length(vector)
+
+    if k <= len do
+      0..(len - 1)
+      |> Enum.reduce(new(len + k), fn i, acc ->
+        acc |> Result.and_then(&update_element(&1, Enum.at(vector, i), i, i + k))
+      end)
+    else
+      Result.error("Length of upper bidiagonal must be less or equal to length of vector!")
+    end
+  end
+
+  def diag(vector, k) when is_list(vector) and is_integer(k) and k < 0 do
+    len = length(vector)
+
+    if abs(k) <= len do
+      0..(len - 1)
+      |> Enum.reduce(new(len - k), fn i, acc ->
+        acc |> Result.and_then(&update_element(&1, Enum.at(vector, i), i - k, i))
+      end)
+    else
+      Result.error("Length of lower bidiagonal must be less or equal to length of vector!")
+    end
+  end
+
+  @doc """
   Transpose of matrix.
 
   Returns result, it means either tuple of {:ok, matrix} or {:error, "msg"}.
@@ -208,7 +265,7 @@ defmodule Matrix do
   ##  Example:
 
       iex> mat = {:ok, [[1,2,3], [4,5,6], [7,8,9]]}
-      iex> mat |> Result.map(&Matrix.transpose(&1))
+      iex> mat |> Result.and_then(&Matrix.transpose(&1))
       {:ok,
         [
           [1, 4, 7],
@@ -218,9 +275,11 @@ defmodule Matrix do
       }
 
   """
-  @spec transpose(Matrix.t()) :: Matrix.t()
+  @spec transpose(Matrix.t()) :: Result.t(String.t(), Matrix.t())
   def transpose(matrix) do
-    make_transpose(matrix)
+    matrix
+    |> make_transpose()
+    |> Result.ok()
   end
 
   @doc """
