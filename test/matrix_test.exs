@@ -1,5 +1,5 @@
 defmodule MatrixTest do
   @moduledoc false
   use ExUnit.Case
-  doctest Matrix
+  doctest MatrixReloaded.Matrix
 end
