@@ -1,8 +1,8 @@
-defmodule Matrix do
+defmodule MatrixReloaded.Matrix do
   @moduledoc """
   Provides a set of functions to work with matrices.
   """
-  alias Vector
+  alias MatrixReloaded.Vector
 
   @type vector :: Vector.t()
   @type t :: [Vector.t()]
@@ -20,10 +20,10 @@ defmodule Matrix do
 
   ## Examples
 
-      iex> Matrix.new(3)
+      iex> MatrixReloaded.Matrix.new(3)
       {:ok, [[0, 0, 0], [0, 0, 0], [0, 0, 0]]}
 
-      iex> Matrix.new({2, 3}, -10)
+      iex> MatrixReloaded.Matrix.new({2, 3}, -10)
       {:ok, [[-10, -10, -10], [-10, -10, -10]]}
 
   """
@@ -63,8 +63,8 @@ defmodule Matrix do
   ## Examples
 
       iex> mat1 = {:ok, [[1, 2, 3], [4, 5, 6], [7, 8, 9]]}
-      iex> mat2 = Matrix.new(3,1)
-      iex> Matrix.and_then2(mat1, mat2, &Matrix.add(&1, &2))
+      iex> mat2 = MatrixReloaded.Matrix.new(3,1)
+      iex> MatrixReloaded.Matrix.and_then2(mat1, mat2, &MatrixReloaded.Matrix.add(&1, &2))
       {:ok,
         [
           [2, 3, 4],
@@ -101,7 +101,7 @@ defmodule Matrix do
 
   ##  Example:
 
-      iex> Matrix.new(4) |> Result.and_then(&Matrix.update(&1, [[1,2],[3,4]], {1,2}))
+      iex> MatrixReloaded.Matrix.new(4) |> Result.and_then(&MatrixReloaded.Matrix.update(&1, [[1,2],[3,4]], {1,2}))
       {:ok,
         [
           [0, 0, 0, 0],
@@ -129,7 +129,7 @@ defmodule Matrix do
 
   ##  Example:
 
-      iex> Matrix.new(3) |> Result.and_then(&Matrix.update_element(&1, -1, 1, 1))
+      iex> MatrixReloaded.Matrix.new(3) |> Result.and_then(&MatrixReloaded.Matrix.update_element(&1, -1, 1, 1))
       {:ok,
         [
           [0, 0, 0],
@@ -154,8 +154,8 @@ defmodule Matrix do
 
   ##  Example:
 
-      iex> {:ok, mat} = Matrix.new(4)
-      iex> Matrix.update_row(mat, [1, 2, 3], {3, 1})
+      iex> {:ok, mat} = MatrixReloaded.Matrix.new(4)
+      iex> MatrixReloaded.Matrix.update_row(mat, [1, 2, 3], {3, 1})
       {:ok,
         [
           [0, 0, 0, 0],
@@ -180,8 +180,8 @@ defmodule Matrix do
 
   ##  Example:
 
-      iex> {:ok, mat} = Matrix.new(4)
-      iex> Matrix.update_col(mat, [[1], [2], [3]], {0, 1})
+      iex> {:ok, mat} = MatrixReloaded.Matrix.new(4)
+      iex> MatrixReloaded.Matrix.update_col(mat, [[1], [2], [3]], {0, 1})
       {:ok,
         [
           [0, 1, 0, 0],
@@ -207,10 +207,10 @@ defmodule Matrix do
 
   ##  Example:
 
-      iex> mat = Matrix.new(5)
-      iex> sub_mat = Matrix.new(2,1)
+      iex> mat = MatrixReloaded.Matrix.new(5)
+      iex> sub_mat = MatrixReloaded.Matrix.new(2,1)
       iex> positions = [{0,0}, {3, 3}]
-      iex> Matrix.update_map(mat, sub_mat, positions)
+      iex> MatrixReloaded.Matrix.update_map(mat, sub_mat, positions)
       {:ok,
         [
           [1, 1, 0, 0, 0],
@@ -249,7 +249,7 @@ defmodule Matrix do
   ##  Example:
 
       iex> mat = {:ok, [[0, 0, 0, 0], [0, 0, 1, 2], [0, 0, 3, 4], [0, 0, 0, 0]]}
-      iex> mat |> Result.and_then(&Matrix.get_submatrix(&1, {1, 2}, 2))
+      iex> mat |> Result.and_then(&MatrixReloaded.Matrix.get_submatrix(&1, {1, 2}, 2))
       {:ok,
         [
           [1, 2],
@@ -258,7 +258,7 @@ defmodule Matrix do
       }
 
       iex> mat = {:ok, [[0, 0, 0, 0], [0, 0, 0, 0], [0, 1, 2, 3], [0, 4, 5, 6]]}
-      iex> mat |> Result.and_then(&Matrix.get_submatrix(&1, {2, 1}, {3, 3}))
+      iex> mat |> Result.and_then(&MatrixReloaded.Matrix.get_submatrix(&1, {2, 1}, {3, 3}))
       {:ok,
         [
           [1, 2, 3],
@@ -282,7 +282,7 @@ defmodule Matrix do
   Returns result, it means either tuple of {:ok, matrix} or {:error, "msg"}.
 
   ##  Example:
-      iex> Matrix.diag([1, 2, 3])
+      iex> MatrixReloaded.Matrix.diag([1, 2, 3])
       {:ok,
         [
           [1, 0, 0],
@@ -290,7 +290,7 @@ defmodule Matrix do
           [0, 0, 3]
         ]
       }
-      iex> Matrix.diag([1, 2, 3], 1)
+      iex> MatrixReloaded.Matrix.diag([1, 2, 3], 1)
       {:ok,
         [
           [0, 1, 0, 0],
@@ -338,7 +338,7 @@ defmodule Matrix do
   ##  Example:
 
       iex> mat = {:ok, [[1,2,3], [4,5,6], [7,8,9]]}
-      iex> mat |> Result.and_then(&Matrix.transpose(&1))
+      iex> mat |> Result.and_then(&MatrixReloaded.Matrix.transpose(&1))
       {:ok,
         [
           [1, 4, 7],
@@ -363,7 +363,7 @@ defmodule Matrix do
   ##  Example:
 
       iex> mat = {:ok, [[1,2,3], [4,5,6], [7,8,9]]}
-      iex> mat |> Result.and_then(&Matrix.flip_lr(&1))
+      iex> mat |> Result.and_then(&MatrixReloaded.Matrix.flip_lr(&1))
       {:ok,
         [
           [3, 2, 1],
@@ -388,7 +388,7 @@ defmodule Matrix do
   ##  Example:
 
       iex> mat = {:ok, [[1,2,3], [4,5,6], [7,8,9]]}
-      iex> mat |> Result.and_then(&Matrix.flip_ud(&1))
+      iex> mat |> Result.and_then(&MatrixReloaded.Matrix.flip_ud(&1))
       {:ok,
         [
           [7, 8, 9],
@@ -413,7 +413,7 @@ defmodule Matrix do
 
   ##  Example:
       iex> mat = {:ok, [[0, 0, 0, 0], [0, 0, 1, 2], [0, 0, 3, 4], [0, 0, 0, 0]]}
-      iex> mat |> Result.and_then(&Matrix.drop_row(&1, 2))
+      iex> mat |> Result.and_then(&MatrixReloaded.Matrix.drop_row(&1, 2))
       {:ok,
         [
           [0, 0, 0, 0],
@@ -423,7 +423,7 @@ defmodule Matrix do
       }
 
       iex> mat = {:ok, [[0, 0, 0, 0], [0, 0, 1, 2], [0, 0, 3, 4], [0, 0, 0, 0]]}
-      iex> mat |> Result.and_then(&Matrix.drop_row(&1, [0, 3]))
+      iex> mat |> Result.and_then(&MatrixReloaded.Matrix.drop_row(&1, [0, 3]))
       {:ok,
         [
           [0, 0, 1, 2],
@@ -453,7 +453,7 @@ defmodule Matrix do
 
   ##  Example:
       iex> mat = {:ok, [[0, 0, 0, 0], [0, 0, 1, 2], [0, 0, 3, 4], [0, 0, 0, 0]]}
-      iex> mat |> Result.and_then(&Matrix.drop_col(&1, 2))
+      iex> mat |> Result.and_then(&MatrixReloaded.Matrix.drop_col(&1, 2))
       {:ok,
         [
           [0, 0, 0],
@@ -464,7 +464,7 @@ defmodule Matrix do
       }
 
       iex> mat = {:ok, [[0, 0, 0, 0], [0, 0, 1, 2], [0, 0, 3, 4], [0, 0, 0, 0]]}
-      iex> mat |> Result.and_then(&Matrix.drop_col(&1, [0, 1]))
+      iex> mat |> Result.and_then(&MatrixReloaded.Matrix.drop_col(&1, [0, 1]))
       {:ok,
         [
           [0, 0],
@@ -501,7 +501,7 @@ defmodule Matrix do
 
   ## Example:
 
-      iex> Matrix.new({3,4}) |> Result.and_then(&Matrix.size(&1))
+      iex> MatrixReloaded.Matrix.new({3,4}) |> Result.and_then(&MatrixReloaded.Matrix.size(&1))
       {3, 4}
 
   """

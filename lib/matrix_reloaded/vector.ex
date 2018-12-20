@@ -1,4 +1,4 @@
-defmodule Vector do
+defmodule MatrixReloaded.Vector do
   @moduledoc """
   Provides a set of functions to work with vectors.
   """
@@ -13,10 +13,10 @@ defmodule Vector do
 
   ## Examples
 
-      iex> Vector.row(4)
+      iex> MatrixReloaded.Vector.row(4)
       [0, 0, 0, 0]
 
-      iex> Vector.row(4, 3.9)
+      iex> MatrixReloaded.Vector.row(4, 3.9)
       [3.9, 3.9, 3.9, 3.9]
 
   """
@@ -34,10 +34,10 @@ defmodule Vector do
 
   ## Examples
 
-      iex> Vector.col(3)
+      iex> MatrixReloaded.Vector.col(3)
       [[0], [0], [0]]
 
-      iex> Vector.col(3, 4)
+      iex> MatrixReloaded.Vector.col(3, 4)
       [[4], [4], [4]]
 
   """
@@ -52,10 +52,10 @@ defmodule Vector do
 
   ## Examples
 
-      iex> Vector.transpose([1, 2, 3])
+      iex> MatrixReloaded.Vector.transpose([1, 2, 3])
       [[1], [2], [3]]
 
-      iex(23)> Vector.transpose([[1], [2], [3]])
+      iex(23)> MatrixReloaded.Vector.transpose([[1], [2], [3]])
       [1, 2, 3]
 
   """
@@ -73,10 +73,10 @@ defmodule Vector do
 
   ## Examples
 
-      iex> Vector.row(5) |> Vector.alternate_seq(1)
+      iex> MatrixReloaded.Vector.row(5) |> MatrixReloaded.Vector.alternate_seq(1)
       [1, 0, 1, 0, 1]
 
-      iex> Vector.row(7) |> Vector.alternate_seq(1, 3)
+      iex> MatrixReloaded.Vector.row(7) |> MatrixReloaded.Vector.alternate_seq(1, 3)
       [1, 0, 0, 1, 0, 0, 1]
 
   """
@@ -94,7 +94,7 @@ defmodule Vector do
 
   ## Examples
 
-      iex> Vector.add([1, 2, 3], [4, 5, 6])
+      iex> MatrixReloaded.Vector.add([1, 2, 3], [4, 5, 6])
       {:ok, [5, 7, 9]}
 
   """
@@ -119,7 +119,7 @@ defmodule Vector do
 
   ## Examples
 
-      iex> Vector.sub([1, 2, 3], [4, 5, 6])
+      iex> MatrixReloaded.Vector.sub([1, 2, 3], [4, 5, 6])
       {:ok, [-3, -3, -3]}
 
   """
@@ -144,7 +144,7 @@ defmodule Vector do
 
   ## Examples
 
-      iex> Vector.dot([1, 2, 3], [4, 5, 6])
+      iex> MatrixReloaded.Vector.dot([1, 2, 3], [4, 5, 6])
       {:ok, 32}
 
   """
@@ -167,7 +167,7 @@ defmodule Vector do
 
   ## Examples
 
-      iex> Vector.row(3, 2) |> Vector.mult_by_num(3)
+      iex> MatrixReloaded.Vector.row(3, 2) |> MatrixReloaded.Vector.mult_by_num(3)
       [6, 6, 6]
 
   """
@@ -184,10 +184,10 @@ defmodule Vector do
 
   ## Example:
 
-      iex> Vector.row(3) |> Vector.size()
+      iex> MatrixReloaded.Vector.row(3) |> MatrixReloaded.Vector.size()
       3
 
-      iex> Vector.col(4, -1) |> Vector.size()
+      iex> MatrixReloaded.Vector.col(4, -1) |> MatrixReloaded.Vector.size()
       4
 
   """
