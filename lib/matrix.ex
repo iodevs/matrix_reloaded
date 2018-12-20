@@ -248,14 +248,7 @@ defmodule Matrix do
 
   ##  Example:
 
-      iex> mat = {:ok,
-        [
-          [0, 0, 0, 0],
-          [0, 0, 1, 2],
-          [0, 0, 3, 4],
-          [0, 0, 0, 0]
-          ]
-        }
+      iex> mat = {:ok, [[0, 0, 0, 0], [0, 0, 1, 2], [0, 0, 3, 4], [0, 0, 0, 0]]}
       iex> mat |> Result.and_then(&Matrix.get_submatrix(&1, {1, 2}, 2))
       {:ok,
         [
@@ -264,15 +257,8 @@ defmodule Matrix do
         ]
       }
 
-      iex> mat = {:ok,
-        [
-          [0, 0, 0, 0],
-          [0, 0, 0, 0],
-          [0, 1, 2, 3],
-          [0, 4, 5, 6]
-          ]
-        }
-      iex> Matrix.new(4) |> Result.and_then(&Matrix.get_submatrix(&1, {2, 1}, {3, 3}))
+      iex> mat = {:ok, [[0, 0, 0, 0], [0, 0, 0, 0], [0, 1, 2, 3], [0, 4, 5, 6]]}
+      iex> mat |> Result.and_then(&Matrix.get_submatrix(&1, {2, 1}, {3, 3}))
       {:ok,
         [
           [1, 2, 3],
@@ -420,6 +406,95 @@ defmodule Matrix do
   end
 
   @doc """
+  Drop the row or list of rows from the matrix. The row (or rows) must be positive
+  integer.
+
+  Returns result, it means either tuple of {:ok, matrix} or {:error, "msg"}.
+
+  ##  Example:
+      iex> mat = {:ok, [[0, 0, 0, 0], [0, 0, 1, 2], [0, 0, 3, 4], [0, 0, 0, 0]]}
+      iex> mat |> Result.and_then(&Matrix.drop_row(&1, 2))
+      {:ok,
+        [
+          [0, 0, 0, 0],
+          [0, 0, 1, 2],
+          [0, 0, 0, 0]
+        ]
+      }
+
+      iex> mat = {:ok, [[0, 0, 0, 0], [0, 0, 1, 2], [0, 0, 3, 4], [0, 0, 0, 0]]}
+      iex> mat |> Result.and_then(&Matrix.drop_row(&1, [0, 3]))
+      {:ok,
+        [
+          [0, 0, 1, 2],
+          [0, 0, 3, 4]
+        ]
+      }
+
+  """
+  @spec drop_row(Matrix.t(), pos_integer | vector) :: Result.t(String.t(), Matrix.t())
+  def drop_row(matrix, row) when is_list(row) and length(row) != 0 do
+    make_drop_rows(matrix, row)
+  end
+
+  def drop_row(matrix, row) when is_integer(row) and 0 <= row do
+    make_drop_row(matrix, row)
+  end
+
+  def drop_row(_matrix, row) when row < 0 do
+    Result.error("Number of row must be positive number!")
+  end
+
+  @doc """
+  Drop the column or list of columns from the matrix. The column (or columns)
+  must be positive integer.
+
+  Returns result, it means either tuple of {:ok, matrix} or {:error, "msg"}.
+
+  ##  Example:
+      iex> mat = {:ok, [[0, 0, 0, 0], [0, 0, 1, 2], [0, 0, 3, 4], [0, 0, 0, 0]]}
+      iex> mat |> Result.and_then(&Matrix.drop_col(&1, 2))
+      {:ok,
+        [
+          [0, 0, 0],
+          [0, 0, 2],
+          [0, 0, 4],
+          [0, 0, 0]
+        ]
+      }
+
+      iex> mat = {:ok, [[0, 0, 0, 0], [0, 0, 1, 2], [0, 0, 3, 4], [0, 0, 0, 0]]}
+      iex> mat |> Result.and_then(&Matrix.drop_col(&1, [0, 1]))
+      {:ok,
+        [
+          [0, 0],
+          [1, 2],
+          [3, 4],
+          [0, 0]
+        ]
+      }
+
+  """
+  @spec drop_col(Matrix.t(), pos_integer | vector) :: Result.t(String.t(), Matrix.t())
+  def drop_col(matrix, col) when is_list(col) and length(col) != 0 do
+    matrix
+    |> transpose()
+    |> Result.and_then(&make_drop_rows(&1, col, "column"))
+    |> Result.and_then(&transpose(&1))
+  end
+
+  def drop_col(matrix, col) when is_integer(col) and 0 <= col do
+    matrix
+    |> transpose()
+    |> Result.and_then(&make_drop_row(&1, col, "column"))
+    |> Result.and_then(&transpose(&1))
+  end
+
+  def drop_col(_matrix, col) when col < 0 do
+    Result.error("Number of column must be positive number!")
+  end
+
+  @doc """
   The size (dimensions) of the matrix.
 
   Returns tuple of {row_size, col_size}.
@@ -540,10 +615,79 @@ defmodule Matrix do
   end
 
   defp make_get_submatrix(matrix, {from_row, from_col}, dim) do
-    {to_row, to_col} = size(matrix)
+    {to_row, to_col} =
+      if is_tuple(dim) do
+        dim
+      else
+        {dim, dim}
+      end
 
-    dim
-    |> Matrix.new()
+    matrix
+    |> Enum.with_index()
+    |> Enum.filter(fn {_row, i} ->
+      i in from_row..(from_row + to_row - 1)
+    end)
+    |> Enum.map(fn {row, _i} ->
+      row
+      |> Enum.with_index()
+      |> Enum.filter(fn {_col, j} ->
+        j in from_col..(from_col + to_col - 1)
+      end)
+      |> Enum.map(fn {val, _j} -> val end)
+    end)
+  end
+
+  defp make_drop_rows(matrix, rows, type \\ "row") do
+    {row_size, col_size} = size(matrix)
+
+    bad_row =
+      rows
+      |> Enum.map(fn r -> r < row_size end)
+      |> Enum.find_index(fn r -> r == false end)
+
+    if length(rows) < row_size do
+      if bad_row == nil do
+        row_help =
+          0..(length(rows) - 1)
+          |> Enum.to_list()
+
+        rows
+        |> Vector.sub(row_help)
+        |> Result.and_then(
+          &Enum.reduce(&1, {:ok, matrix}, fn r, acc ->
+            acc |> Result.and_then(fn a -> drop_row(a, r) end)
+          end)
+        )
+      else
+        Result.error(
+          "It is not possible drop the #{type} #{Enum.at(rows, bad_row)} from matrix! Numbering of #{
+            type
+          }s begins from 0 to (matrix #{type} size - 1)."
+        )
+      end
+    else
+      Result.error(
+        "It is not possible drop all the #{type} from matrix! Matrix has dimensions {#{row_size}, #{
+          col_size
+        }}."
+      )
+    end
+  end
+
+  defp make_drop_row(matrix, row, type \\ "row") do
+    {row_size, _col_size} = size(matrix)
+
+    if row < row_size do
+      matrix
+      |> List.delete_at(row)
+      |> Result.ok()
+    else
+      Result.error(
+        "It is not possible drop the #{type} #{row} from matrix! Numbering of #{type}s begins from 0 to (matrix #{
+          type
+        } size - 1)."
+      )
+    end
   end
 
   defp make_transpose([[] | _]), do: []
