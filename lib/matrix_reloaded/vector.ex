@@ -21,7 +21,7 @@ defmodule MatrixReloaded.Vector do
 
   """
 
-  @spec row(pos_integer, number) :: Vector.t()
+  @spec row(pos_integer, number) :: t()
   def row(size, val \\ 0) do
     List.duplicate(val, size)
   end
@@ -42,7 +42,7 @@ defmodule MatrixReloaded.Vector do
 
   """
 
-  @spec col(pos_integer, number) :: [Vector.t()]
+  @spec col(pos_integer, number) :: [t()]
   def col(size, val \\ 0) do
     val |> List.duplicate(size) |> Enum.chunk_every(1)
   end
@@ -59,7 +59,7 @@ defmodule MatrixReloaded.Vector do
       [1, 2, 3]
 
   """
-  @spec transpose(Vector.t()) :: Vector.t()
+  @spec transpose(t()) :: t()
   def transpose([hd | _] = vec) when is_list(hd) do
     List.flatten(vec)
   end
@@ -81,7 +81,7 @@ defmodule MatrixReloaded.Vector do
 
   """
 
-  @spec alternate_seq(Vector.t(), number, pos_integer) :: Vector.t()
+  @spec alternate_seq(t(), number, pos_integer) :: t()
   def alternate_seq(vec, val, step \\ 2) do
     Enum.map_every(vec, step, fn x -> x + val end)
   end
@@ -99,7 +99,7 @@ defmodule MatrixReloaded.Vector do
 
   """
 
-  @spec add(Vector.t(), Vector.t()) :: Result.t(String.t(), Vector.t())
+  @spec add(t(), t()) :: Result.t(String.t(), t())
   def add(vec1, vec2) do
     if size(vec1) == size(vec2) do
       [vec1, vec2]
@@ -124,7 +124,7 @@ defmodule MatrixReloaded.Vector do
 
   """
 
-  @spec sub(Vector.t(), Vector.t()) :: Result.t(String.t(), Vector.t())
+  @spec sub(t(), t()) :: Result.t(String.t(), t())
   def sub(vec1, vec2) do
     if size(vec1) == size(vec2) do
       [vec1, vec2]
@@ -149,7 +149,7 @@ defmodule MatrixReloaded.Vector do
 
   """
 
-  @spec dot(Vector.t(), Vector.t()) :: Result.t(String.t(), number)
+  @spec dot(t(), t()) :: Result.t(String.t(), number)
   def dot(vec1, vec2) do
     if size(vec1) == size(vec2) do
       [vec1, vec2]
@@ -172,7 +172,7 @@ defmodule MatrixReloaded.Vector do
 
   """
 
-  @spec mult_by_num(Vector.t(), number) :: Vector.t()
+  @spec mult_by_num(t(), number) :: t()
   def mult_by_num(vec, val) do
     Enum.map(vec, fn x -> x * val end)
   end
@@ -191,6 +191,6 @@ defmodule MatrixReloaded.Vector do
       4
 
   """
-  @spec size(Vector.t()) :: non_neg_integer
+  @spec size(t()) :: non_neg_integer
   def size(vec), do: length(vec)
 end
