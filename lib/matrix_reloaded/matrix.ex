@@ -8,7 +8,7 @@ defmodule MatrixReloaded.Matrix do
   @type t :: [Vector.t()]
   @type dimension :: {pos_integer, pos_integer} | pos_integer
   @type index :: {non_neg_integer, non_neg_integer}
-  @type element :: number | vector | Matrix.t()
+  @type element :: number | vector | t()
 
   @doc """
   Create a new matrix of the specified size (number of rows and columns).
@@ -27,7 +27,7 @@ defmodule MatrixReloaded.Matrix do
       {:ok, [[-10, -10, -10], [-10, -10, -10]]}
 
   """
-  @spec new(dimension, number) :: Result.t(String.t(), Matrix.t())
+  @spec new(dimension, number) :: Result.t(String.t(), t())
   def new(dimension, val \\ 0)
 
   def new({rows, cols}, val) when rows > 0 and cols > 0 do
@@ -74,7 +74,7 @@ defmodule MatrixReloaded.Matrix do
       }
 
   """
-  @spec add(Matrix.t(), Matrix.t()) :: Result.t(String.t(), Matrix.t())
+  @spec add(t(), t()) :: Result.t(String.t(), t())
   def add(matrix1, matrix2) do
     {rs1, cs1} = size(matrix1)
     {rs2, cs2} = size(matrix2)
@@ -112,11 +112,13 @@ defmodule MatrixReloaded.Matrix do
       }
 
   """
-  @spec update(Matrix.t(), element, index) :: Result.t(String.t(), Matrix.t())
+  @spec update(t(), element, index) :: Result.t(String.t(), t())
   def update(matrix, submatrix, index) do
+    dim_sub = dimension_of_submatrix(index, size(submatrix))
+
     matrix
-    |> is_possible_insert_submatrix_on_position?(submatrix, index)
-    |> Result.and_then(&is_possible_insert_submatrix_to_matrix?(&1, submatrix))
+    |> is_submatrix_smaller_than_matrix?(size(submatrix))
+    |> Result.and_then(&is_submatrix_in_matrix?(&1, dim_sub, index))
     |> Result.map(&make_update(&1, submatrix, index))
   end
 
@@ -139,8 +141,7 @@ defmodule MatrixReloaded.Matrix do
       }
 
   """
-  @spec update_element(Matrix.t(), number, non_neg_integer, non_neg_integer) ::
-          Result.t(String.t(), Matrix.t())
+  @spec update_element(t(), number, non_neg_integer, non_neg_integer) :: Result.t(String.t(), t())
   def update_element(matrix, el, row, col) when is_number(el) do
     update(matrix, [[el]], {row, col})
   end
@@ -166,7 +167,7 @@ defmodule MatrixReloaded.Matrix do
       }
 
   """
-  @spec update_row(Matrix.t(), element, index) :: Result.t(String.t(), Matrix.t())
+  @spec update_row(t(), element, index) :: Result.t(String.t(), t())
   def update_row(matrix, submatrix, index) do
     update(matrix, [submatrix], index)
   end
@@ -192,7 +193,7 @@ defmodule MatrixReloaded.Matrix do
       }
 
   """
-  @spec update_col(Matrix.t(), element, index) :: Result.t(String.t(), Matrix.t())
+  @spec update_col(t(), element, index) :: Result.t(String.t(), t())
   def update_col(matrix, submatrix, index) do
     update(matrix, submatrix, index)
   end
@@ -222,7 +223,7 @@ defmodule MatrixReloaded.Matrix do
       }
 
   """
-  @spec update_map(Matrix.t(), element, list(index)) :: Result.t(String.t(), Matrix.t())
+  @spec update_map(t(), element, list(index)) :: Result.t(String.t(), t())
   def update_map(matrix, submatrix, positions) do
     {row, col, check_size} = and_then2(matrix, submatrix, &check_size(&1, &2, positions))
 
@@ -267,11 +268,111 @@ defmodule MatrixReloaded.Matrix do
       }
 
   """
-  @spec get_submatrix(Matrix.t(), index, dimension) :: Result.t(String.t(), Matrix.t())
-  def get_submatrix(matrix, index, dim) do
+  @spec get_submatrix(t(), index, dimension) :: Result.t(String.t(), t())
+  def get_submatrix(matrix, index, dimension) do
+    dim_sub = dimension_of_submatrix(index, dimension)
+
     matrix
-    |> is_possible_get_submatrix_on_position?(index, dim)
-    |> Result.map(&make_get_submatrix(&1, index, dim))
+    |> is_submatrix_smaller_than_matrix?(dim_sub)
+    |> Result.and_then(&is_submatrix_in_matrix?(&1, index, dim_sub))
+    |> Result.map(&make_get_submatrix(&1, index, dim_sub))
+  end
+
+  @doc """
+  Get a element from the matrix. By index you can select an element.
+
+  Returns result, it means either tuple of {:ok, number} or {:error, "msg"}.
+
+  ##  Example:
+
+      iex> mat = {:ok, [[0, 0, 0, 0], [0, 0, 1, 2], [0, 0, 3, 4], [0, 0, 0, 0]]}
+      iex> mat |> Result.and_then(&MatrixReloaded.Matrix.get_element(&1, {2, 2}))
+      {:ok, 3}
+
+  """
+  @spec get_element(t(), index) :: Result.t(String.t(), number)
+  def get_element(matrix, index) when is_tuple(index) do
+    matrix
+    |> get_submatrix(index, 1)
+    |> Result.map(fn el -> el |> hd |> hd end)
+  end
+
+  @doc """
+  Get a row from the matrix. By index you can select the row which you want.
+
+  Returns result, it means either tuple of {:ok, number} or {:error, "msg"}.
+
+  ##  Example:
+
+      iex> mat = {:ok, [[0, 0, 0, 0], [0, 0, 1, 2], [0, 0, 3, 4], [0, 0, 0, 0]]}
+      iex> mat |> Result.and_then(&MatrixReloaded.Matrix.get_row(&1, {1, 0}))
+      {:ok, [0, 0, 1, 2]}
+
+      iex> mat = {:ok, [[0, 0, 0, 0], [0, 0, 1, 2], [0, 0, 3, 4], [0, 0, 0, 0]]}
+      iex> mat |> Result.and_then(&MatrixReloaded.Matrix.get_row(&1, {2, 1}, 2))
+      {:ok, [0, 3]}
+
+  """
+  @spec get_row(t(), index, non_neg_integer) :: Result.t(String.t(), Vector.t())
+  def get_row(matrix, index, num_of_el \\ 0)
+
+  def get_row(_matrix, _index, num_of_el) when 1 == num_of_el do
+    Result.error("If you want just one element of matrix, use function `get_element`.")
+  end
+
+  def get_row(_matrix, _index, num_of_el) when is_float(num_of_el) or num_of_el < 0 do
+    Result.error("Number of element must be positive number!")
+  end
+
+  def get_row(matrix, {from_row, _from_col} = index, num_of_el)
+      when is_integer(num_of_el) do
+    {size_row, _size_col} = size(matrix)
+
+    dim =
+      if num_of_el == 0 do
+        size_row
+      else
+        num_of_el
+      end
+
+    matrix
+    |> is_row_in_matrix?(index, dim)
+    |> Result.map(&make_get_submatrix(&1, index, {from_row, dim}))
+    |> Result.map(&hd(&1))
+  end
+
+  @doc """
+  Get a column from the matrix. By index you can select the column which you want.
+
+  Returns result, it means either tuple of {:ok, number} or {:error, "msg"}.
+
+  ##  Example:
+
+      iex> mat = {:ok, [[0, 0, 0, 0], [0, 0, 1, 2], [0, 0, 3, 4], [0, 0, 0, 0]]}
+      iex> mat |> Result.and_then(&MatrixReloaded.Matrix.get_col(&1, {0, 3}))
+      {:ok, [[0], [2], [4], [0]]}
+
+      iex> mat = {:ok, [[0, 0, 0, 0], [0, 0, 1, 2], [0, 0, 3, 4], [0, 0, 0, 0]]}
+      iex> mat |> Result.and_then(&MatrixReloaded.Matrix.get_col(&1, {1, 2}, 2))
+      {:ok, [[1], [3]]}
+
+  """
+  @spec get_col(t(), index, non_neg_integer) :: Result.t(String.t(), t())
+  def get_col(matrix, index, num_of_el \\ 0)
+
+  def get_col(_matrix, _index, num_of_el) when 1 == num_of_el do
+    Result.error("If you want just one element of matrix, use function `get_element`.")
+  end
+
+  def get_col(_matrix, _index, num_of_el) when is_float(num_of_el) or num_of_el < 0 do
+    Result.error("Number of element must be positive number!")
+  end
+
+  def get_col(matrix, {from_row, from_col}, num_of_el) when is_integer(num_of_el) do
+    matrix
+    |> transpose()
+    |> Result.and_then(&get_row(&1, {from_col, from_row}, num_of_el))
+    |> Result.map(&Vector.transpose(&1))
   end
 
   @doc """
@@ -301,7 +402,7 @@ defmodule MatrixReloaded.Matrix do
       }
 
   """
-  @spec diag(Vector.t(), integer()) :: Result.t(String.t(), Matrix.t())
+  @spec diag(Vector.t(), integer()) :: Result.t(String.t(), t())
   def diag(vector, k \\ 0)
 
   def diag(vector, k) when is_list(vector) and is_integer(k) and 0 <= k do
@@ -348,7 +449,7 @@ defmodule MatrixReloaded.Matrix do
       }
 
   """
-  @spec transpose(Matrix.t()) :: Result.t(String.t(), Matrix.t())
+  @spec transpose(t()) :: Result.t(String.t(), t())
   def transpose(matrix) do
     matrix
     |> make_transpose()
@@ -373,7 +474,7 @@ defmodule MatrixReloaded.Matrix do
       }
 
   """
-  @spec flip_lr(Matrix.t()) :: Result.t(String.t(), Matrix.t())
+  @spec flip_lr(t()) :: Result.t(String.t(), t())
   def flip_lr(matrix) do
     matrix
     |> Enum.map(fn row -> Enum.reverse(row) end)
@@ -398,7 +499,7 @@ defmodule MatrixReloaded.Matrix do
       }
 
   """
-  @spec flip_ud(Matrix.t()) :: Result.t(String.t(), Matrix.t())
+  @spec flip_ud(t()) :: Result.t(String.t(), t())
   def flip_ud(matrix) do
     matrix
     |> Enum.reverse()
@@ -432,7 +533,7 @@ defmodule MatrixReloaded.Matrix do
       }
 
   """
-  @spec drop_row(Matrix.t(), pos_integer | vector) :: Result.t(String.t(), Matrix.t())
+  @spec drop_row(t(), pos_integer | vector) :: Result.t(String.t(), t())
   def drop_row(matrix, row) when is_list(row) and length(row) != 0 do
     make_drop_rows(matrix, row)
   end
@@ -475,7 +576,7 @@ defmodule MatrixReloaded.Matrix do
       }
 
   """
-  @spec drop_col(Matrix.t(), pos_integer | vector) :: Result.t(String.t(), Matrix.t())
+  @spec drop_col(t(), pos_integer | vector) :: Result.t(String.t(), t())
   def drop_col(matrix, col) when is_list(col) and length(col) != 0 do
     matrix
     |> transpose()
@@ -505,7 +606,7 @@ defmodule MatrixReloaded.Matrix do
       {3, 4}
 
   """
-  @spec size(Matrix.t()) :: {pos_integer, pos_integer}
+  @spec size(t()) :: {pos_integer, pos_integer}
   def size(matrix), do: {length(matrix), length(List.first(matrix))}
 
   def and_then2({:ok, val1}, {:ok, val2}, f) when is_function(f, 2) do
@@ -518,47 +619,10 @@ defmodule MatrixReloaded.Matrix do
   defp make_row(0, _val), do: []
   defp make_row(n, val), do: [val] ++ make_row(n - 1, val)
 
-  defp is_possible_insert_submatrix_on_position?(
-         matrix,
-         submatrix,
-         {from_row, from_col}
-       ) do
+  defp is_submatrix_in_matrix?(matrix, {from_row, from_col}, {to_row, to_col}) do
     {row_size, col_size} = size(matrix)
-    {row_size_sub, col_size_sub} = size(submatrix)
-
-    calculated_row_size = from_row + row_size_sub
-    calculated_col_size = from_col + col_size_sub
-
-    if calculated_row_size <= row_size and calculated_col_size <= col_size do
-      Result.ok(matrix)
-    else
-      Result.error(
-        "On given position {#{from_row}, #{from_col}} you can not insert the submatrix size of {#{
-          row_size_sub
-        }, #{col_size_sub}}. A part of submatrix would be outside of matrix!"
-      )
-    end
-  end
-
-  defp is_possible_insert_submatrix_to_matrix?(
-         matrix,
-         submatrix
-       ) do
-    {row_size, col_size} = size(matrix)
-    {row_size_sub, col_size_sub} = size(submatrix)
-
-    if row_size_sub <= row_size and col_size_sub <= col_size do
-      Result.ok(matrix)
-    else
-      Result.error("Size of submatrix is bigger than size of matrix!")
-    end
-  end
-
-  defp is_possible_get_submatrix_on_position?(matrix, {from_row, from_col}, {to_row, to_col}) do
-    {row_size, col_size} = size(matrix)
-
-    calculated_row_size = to_row - from_row + 1
-    calculated_col_size = to_col - from_col + 1
+    calculated_row_size = to_row + from_row - 1
+    calculated_col_size = to_col + from_col - 1
 
     if calculated_row_size < row_size and calculated_col_size < col_size do
       Result.ok(matrix)
@@ -571,25 +635,29 @@ defmodule MatrixReloaded.Matrix do
     end
   end
 
-  defp is_possible_get_submatrix_on_position?(matrix, {from_row, from_col}, dim) when 0 < dim do
+  defp is_submatrix_smaller_than_matrix?(
+         matrix,
+         {size_row_sub, size_col_sub}
+       ) do
     {row_size, col_size} = size(matrix)
 
-    calculated_row_size = dim + from_row
-    calculated_col_size = dim + from_col
+    if size_row_sub < row_size and size_col_sub < col_size do
+      Result.ok(matrix)
+    else
+      Result.error("Size of submatrix is same or bigger than size of matrix!")
+    end
+  end
+
+  defp is_row_in_matrix?(matrix, {from_row, from_col}, dim) do
+    {row_size, col_size} = size(matrix)
+    calculated_row_size = dim - from_row
+    calculated_col_size = dim - from_col
 
     if calculated_row_size <= row_size and calculated_col_size <= col_size do
       Result.ok(matrix)
     else
-      Result.error(
-        "On given position {#{from_row}, #{from_col}} you can not get the submatrix size of {#{
-          dim
-        }, #{dim}}. A part of submatrix is outside of matrix!"
-      )
+      Result.error("Size of row is bigger than row size of matrix {#{row_size}, #{col_size}}!")
     end
-  end
-
-  defp is_possible_get_submatrix_on_position?(_matrix, _index, dim) when dim < 0 do
-    Result.error("Dimension must be positive number!")
   end
 
   defp make_update(matrix, submatrix, {from_row, from_col}) do
@@ -614,14 +682,7 @@ defmodule MatrixReloaded.Matrix do
     end)
   end
 
-  defp make_get_submatrix(matrix, {from_row, from_col}, dim) do
-    {to_row, to_col} =
-      if is_tuple(dim) do
-        dim
-      else
-        {dim, dim}
-      end
-
+  defp make_get_submatrix(matrix, {from_row, from_col}, {to_row, to_col}) do
     matrix
     |> Enum.with_index()
     |> Enum.filter(fn {_row, i} ->
@@ -635,6 +696,17 @@ defmodule MatrixReloaded.Matrix do
       end)
       |> Enum.map(fn {val, _j} -> val end)
     end)
+  end
+
+  defp dimension_of_submatrix(index, dimension) do
+    {from_row, from_col} = index
+
+    if is_tuple(dimension) do
+      {to_row, to_col} = dimension
+      {to_row - from_row + 1, to_col - from_col + 1}
+    else
+      {dimension, dimension}
+    end
   end
 
   defp make_drop_rows(matrix, rows, type \\ "row") do
@@ -667,7 +739,7 @@ defmodule MatrixReloaded.Matrix do
       end
     else
       Result.error(
-        "It is not possible drop all the #{type} from matrix! Matrix has dimensions {#{row_size}, #{
+        "It is not possible drop all the #{type}s from matrix! Matrix has dimensions {#{row_size}, #{
           col_size
         }}."
       )
