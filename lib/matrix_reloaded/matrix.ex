@@ -596,6 +596,74 @@ defmodule MatrixReloaded.Matrix do
   end
 
   @doc """
+  Concatenate matrices horizontally. Both matrices must have same rows dimension.
+
+  Returns result, it means either tuple of {:ok, matrix} or {:error, "msg"}.
+
+  ##  Example:
+      iex> mat1 = MatrixReloaded.Matrix.diag([1, 1, 1])
+      iex> mat2 = MatrixReloaded.Matrix.diag([2, 2, 2])
+      iex> MatrixReloaded.Matrix.and_then2(mat1, mat2, &MatrixReloaded.Matrix.concat_row(&1, &2))
+      {:ok,
+        [
+          [1, 0, 0, 2, 0, 0],
+          [0, 1, 0, 0, 2, 0],
+          [0, 0, 1, 0, 0, 2]
+        ]
+      }
+
+  """
+  @spec concat_row(t(), t()) :: Result.t(String.t(), t())
+  def concat_row(matrix1, matrix2) do
+    {rs1, _cs1} = size(matrix1)
+    {rs2, _cs2} = size(matrix2)
+
+    if rs1 == rs2 do
+      matrix1
+      |> Enum.zip(matrix2)
+      |> Enum.map(fn {r1, r2} -> Enum.concat(r1, r2) end)
+      |> Result.ok()
+    else
+      Result.error("Matrices have different row dimensions. Must be same!")
+    end
+  end
+
+  @doc """
+  Concatenate matrices vertically. Both matrices must have same columns dimension.
+
+  Returns result, it means either tuple of {:ok, matrix} or {:error, "msg"}.
+
+  ##  Example:
+      iex> mat1 = MatrixReloaded.Matrix.diag([1, 1, 1])
+      iex> mat2 = MatrixReloaded.Matrix.diag([2, 2, 2])
+      iex> MatrixReloaded.Matrix.and_then2(mat1, mat2, &MatrixReloaded.Matrix.concat_col(&1, &2))
+      {:ok,
+        [
+          [1, 0, 0],
+          [0, 1, 0],
+          [0, 0, 1],
+          [2, 0, 0],
+          [0, 2, 0],
+          [0, 0, 2]
+        ]
+      }
+
+  """
+  @spec concat_col(t(), t()) :: Result.t(String.t(), t())
+  def concat_col(matrix1, matrix2) do
+    {_rs1, cs1} = size(matrix1)
+    {_rs2, cs2} = size(matrix2)
+
+    if cs1 == cs2 do
+      matrix1
+      |> Enum.concat(matrix2)
+      |> Result.ok()
+    else
+      Result.error("Matrices have different column dimensions. Must be same!")
+    end
+  end
+
+  @doc """
   The size (dimensions) of the matrix.
 
   Returns tuple of {row_size, col_size}.
