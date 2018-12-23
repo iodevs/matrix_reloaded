@@ -25,6 +25,7 @@ matrix_reloaded-*.tar
 
 .envs
 .vimrc
+matrix.csv
 
 tags
 .projections.json
