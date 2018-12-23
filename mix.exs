@@ -4,7 +4,7 @@ defmodule MatrixReloaded.MixProject do
   def project do
     [
       app: :matrix_reloaded,
-      dialyzer: dialyzer_base() |> dialyzer_ptl(System.get_env("SEMAPHORE_CACHE_DIR")),      
+      dialyzer: dialyzer_base() |> dialyzer_ptl(System.get_env("SEMAPHORE_CACHE_DIR")),
       version: "0.1.0",
       elixir: "~> 1.7",
       elixirc_paths: elixirc_paths(Mix.env()),
@@ -17,7 +17,7 @@ defmodule MatrixReloaded.MixProject do
         "coveralls.detail": :test,
         "coveralls.post": :test,
         "coveralls.html": :test
-      ]      
+      ]
     ]
   end
 
@@ -27,13 +27,13 @@ defmodule MatrixReloaded.MixProject do
       extra_applications: [:logger]
     ]
   end
-  
+
   # Specifies which paths to compile per environment.
   defp elixirc_paths(:test), do: ["lib", "test/support"]
-  defp elixirc_paths(_), do: ["lib"]  
+  defp elixirc_paths(_), do: ["lib"]
 
   # Run "mix help deps" to learn about dependencies.
-  defp deps do  
+  defp deps do
     [
       {:result, "~> 1.1"},
       {:ex_maybe, "~> 1.0"},
@@ -41,10 +41,11 @@ defmodule MatrixReloaded.MixProject do
       {:credo, "~> 0.9", only: [:dev, :test]},
       {:excoveralls, "~> 0.9", only: :test},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
+      {:csvlixir, "~> 2.0.3"}
     ]
   end
-  
-defp dialyzer_base() do
+
+  defp dialyzer_base() do
     [
       plt_add_deps: :transitive,
       ignore_warnings: "dialyzer.ignore-warnings",
@@ -90,5 +91,5 @@ defp dialyzer_base() do
       :error, _ ->
         major
     end
-  end  
+  end
 end

@@ -794,6 +794,36 @@ defmodule MatrixReloaded.Matrix do
   @spec size(t()) :: {pos_integer, pos_integer}
   def size(matrix), do: {length(matrix), length(List.first(matrix))}
 
+  @doc """
+  Save a matrix to csv file at a project root directory. Default name
+  of csv file is `matrix.csv`. Or you can set a path to save dir.
+
+  Returns result, it means either tuple of {:ok, :ok} or {:error, "msg"}.
+
+  ## Example:
+
+      iex> mat_ones = MatrixReloaded.Matrix.new(3, 1)
+      iex> mat_zeros = MatrixReloaded.Matrix.new(5)
+      iex> mat = MatrixReloaded.Matrix.new(7, 1)
+      iex> mat = MatrixReloaded.Matrix.and_then2(mat, mat_zeros, &MatrixReloaded.Matrix.update(&1, &2, {1, 1}))
+      iex> mat = MatrixReloaded.Matrix.and_then2(mat, mat_ones, &MatrixReloaded.Matrix.update(&1, &2, {2, 2}))
+      iex> mat |> Result.and_then(&MatrixReloaded.Matrix.save_csv(&1))
+      {:ok, :ok}
+
+      iex> MatrixReloaded.Matrix.new({3,4}) |> Result.and_then(&MatrixReloaded.Matrix.save_csv(&1, "/tmp/matrix.csv"))
+      {:ok, :ok}
+
+  """
+  @spec save_csv(t(), String.t()) :: Result.t(String.t(), any())
+  def save_csv(matrix, file_name \\ "matrix.csv") do
+    file_name
+    |> File.open([:write], fn file ->
+      matrix
+      |> CSVLixir.write()
+      |> Enum.each(&IO.write(file, &1))
+    end)
+  end
+
   def and_then2({:ok, val1}, {:ok, val2}, f) when is_function(f, 2) do
     f.(val1, val2)
   end
