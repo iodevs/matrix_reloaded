@@ -30,7 +30,8 @@ defmodule MatrixReloaded.Matrix do
   @spec new(dimension, number) :: Result.t(String.t(), t())
   def new(dimension, val \\ 0)
 
-  def new({rows, cols}, val) when rows > 0 and cols > 0 do
+  def new({rows, cols}, val)
+      when is_integer(rows) and rows > 0 and is_integer(cols) and cols > 0 do
     for(
       _r <- 1..rows,
       do: make_row(cols, val)
@@ -38,7 +39,7 @@ defmodule MatrixReloaded.Matrix do
     |> Result.ok()
   end
 
-  def new(rows, val) when rows > 0 do
+  def new(rows, val) when is_integer(rows) and rows > 0 do
     for(
       _r <- 1..rows,
       do: make_row(rows, val)
@@ -47,11 +48,11 @@ defmodule MatrixReloaded.Matrix do
   end
 
   def new({_rows, _cols}, _val) do
-    Result.error("It is not possible create the matrix with negative row or column!")
+    Result.error("Row or column must be positive integer!")
   end
 
   def new(_rows, _val) do
-    Result.error("It is not possible create square matrix with negative row or column!")
+    Result.error("Row or column must be positive integer!")
   end
 
   @doc """
@@ -88,6 +89,122 @@ defmodule MatrixReloaded.Matrix do
       |> Result.product()
     else
       Result.error("Sizes (dimensions) of both matrices must be same!")
+    end
+  end
+
+  @doc """
+  Subtraction of two matrices. Sizes (dimensions) of both matrices must be same.
+  Otherwise you get error message.
+
+  Returns result, it means either tuple of {:ok, matrix} or {:error, "msg"}.
+
+  ## Examples
+
+      iex> mat1 = {:ok, [[1, 2, 3], [4, 5, 6], [7, 8, 9]]}
+      iex> mat2 = MatrixReloaded.Matrix.new(3,1)
+      iex> MatrixReloaded.Matrix.and_then2(mat1, mat2, &MatrixReloaded.Matrix.sub(&1, &2))
+      {:ok,
+        [
+          [0, 1, 2],
+          [3, 4, 5],
+          [6, 7, 8]
+        ]
+      }
+
+  """
+  @spec sub(t(), t()) :: Result.t(String.t(), t())
+  def sub(matrix1, matrix2) do
+    {rs1, cs1} = size(matrix1)
+    {rs2, cs2} = size(matrix2)
+
+    if rs1 == rs2 and cs1 == cs2 do
+      matrix1
+      |> Enum.zip(matrix2)
+      |> Enum.map(fn {row1, row2} ->
+        Vector.sub(row1, row2)
+      end)
+      |> Result.product()
+    else
+      Result.error("Sizes (dimensions) of both matrices must be same!")
+    end
+  end
+
+  @doc """
+  Product of two matrices. If matrix `A` has a size `n × p` and matrix `B` has
+  a size `p × m` then their matrix product `AB` is matrix of size `n × m`.
+  Otherwise you get error message.
+
+  Returns result, it means either tuple of {:ok, matrix} or {:error, "msg"}.
+
+  ## Examples
+
+      iex> mat1 = {:ok, [[1, 2], [3, 4], [5, 6], [7, 8]]}
+      iex> mat2 = {:ok, [[1, 2 ,3], [4, 5, 6]]}
+      iex> MatrixReloaded.Matrix.and_then2(mat1, mat2, &MatrixReloaded.Matrix.product(&1, &2))
+      {:ok,
+        [
+          [9, 12, 15],
+          [19, 26, 33],
+          [29, 40, 51],
+          [39, 54, 69]
+        ]
+      }
+
+  """
+  @spec product(t(), t()) :: Result.t(String.t(), t())
+  def product(matrix1, matrix2) do
+    {_rs1, cs1} = size(matrix1)
+    {rs2, _cs2} = size(matrix2)
+
+    if cs1 == rs2 do
+      matrix1
+      |> Enum.map(fn row1 ->
+        matrix2
+        |> transpose()
+        |> Result.and_then(&Enum.map(&1, fn row2 -> Vector.dot(row1, row2) end))
+      end)
+      |> Enum.map(&Result.product(&1))
+      |> Result.product()
+    else
+      Result.error("Column size of first matrix must be same as row size of second matrix!")
+    end
+  end
+
+  @doc """
+  Schur product (or the Hadamard product) of two matrices. It produces another
+  matrix where each element `i, j` is the product of elements `i, j` of the
+  original two matrices. Sizes (dimensions) of both matrices must be same.
+  Otherwise you get error message.
+
+  Returns result, it means either tuple of {:ok, matrix} or {:error, "msg"}.
+
+  ## Examples
+
+      iex> mat1 = {:ok, [[1, 2, 3], [5, 6, 7]]}
+      iex> mat2 = {:ok, [[1, 2 ,3], [4, 5, 6]]}
+      iex> MatrixReloaded.Matrix.and_then2(mat1, mat2, &MatrixReloaded.Matrix.schur_product(&1, &2))
+      {:ok,
+        [
+          [1, 4, 9],
+          [20, 30, 42]
+        ]
+      }
+
+  """
+  @spec schur_product(t(), t()) :: Result.t(String.t(), t())
+  def schur_product(matrix1, matrix2) do
+    {rs1, cs1} = size(matrix1)
+    {rs2, cs2} = size(matrix2)
+
+    if rs1 == rs2 and cs1 == cs2 do
+      matrix1
+      |> Enum.zip(matrix2)
+      |> Enum.map(fn {row1, row2} -> Vector.inner_product(row1, row2) end)
+      |> Result.product()
+    else
+      Result.error(
+        "Dimension of matrix {#{rs1}, #{cs1}} is not same as dimension of matrix {#{rs2}, #{cs2}}!"
+      )
     end
   end
 
@@ -300,7 +417,7 @@ defmodule MatrixReloaded.Matrix do
   @doc """
   Get a row from the matrix. By index you can select the row which you want.
 
-  Returns result, it means either tuple of {:ok, number} or {:error, "msg"}.
+  Returns result, it means either tuple of {:ok, vector} or {:error, "msg"}.
 
   ##  Example:
 
@@ -344,7 +461,7 @@ defmodule MatrixReloaded.Matrix do
   @doc """
   Get a column from the matrix. By index you can select the column which you want.
 
-  Returns result, it means either tuple of {:ok, number} or {:error, "msg"}.
+  Returns result, it means either tuple of {:ok, matrix} or {:error, "msg"}.
 
   ##  Example:
 

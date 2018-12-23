@@ -2,6 +2,7 @@ defmodule MatrixReloaded.Vector do
   @moduledoc """
   Provides a set of functions to work with vectors.
   """
+  alias MatrixReloaded.Matrix
 
   @type t :: list(number)
 
@@ -88,7 +89,7 @@ defmodule MatrixReloaded.Vector do
 
   @doc """
   Addition of two a row vectors. These two vectors must have a same size.
-  Otherwise you get error message.
+  Otherwise you get an error message.
 
   Returns result, it means either tuple of {:ok, vector} or {:error, "msg"}.
 
@@ -100,6 +101,10 @@ defmodule MatrixReloaded.Vector do
   """
 
   @spec add(t(), t()) :: Result.t(String.t(), t())
+  def add([hd1 | _tl1], [hd2 | _tl2]) when is_list(hd1) or is_list(hd2) do
+    Result.error("Vectors must be row type!")
+  end
+
   def add(vec1, vec2) do
     if size(vec1) == size(vec2) do
       [vec1, vec2]
@@ -113,7 +118,7 @@ defmodule MatrixReloaded.Vector do
 
   @doc """
   Subtraction of two a row vectors. These two vectors must have a same size.
-  Otherwise you get error message.
+  Otherwise you get an error message.
 
   Returns result, it means either tuple of {:ok, vector} or {:error, "msg"}.
 
@@ -125,6 +130,10 @@ defmodule MatrixReloaded.Vector do
   """
 
   @spec sub(t(), t()) :: Result.t(String.t(), t())
+  def sub([hd1 | _tl1], [hd2 | _tl2]) when is_list(hd1) or is_list(hd2) do
+    Result.error("Vectors must be row type!")
+  end
+
   def sub(vec1, vec2) do
     if size(vec1) == size(vec2) do
       [vec1, vec2]
@@ -138,7 +147,7 @@ defmodule MatrixReloaded.Vector do
 
   @doc """
   Scalar product of two a row vectors. These two vectors must have a same size.
-  Otherwise you get error message.
+  Otherwise you get an error message.
 
   Returns result, it means either tuple of {:ok, number} or {:error, "msg"}.
 
@@ -150,6 +159,10 @@ defmodule MatrixReloaded.Vector do
   """
 
   @spec dot(t(), t()) :: Result.t(String.t(), number)
+  def dot([hd1 | _tl1], [hd2 | _tl2]) when is_list(hd1) or is_list(hd2) do
+    Result.error("Vectors must be row type!")
+  end
+
   def dot(vec1, vec2) do
     if size(vec1) == size(vec2) do
       [vec1, vec2]
@@ -159,6 +172,73 @@ defmodule MatrixReloaded.Vector do
       |> Result.ok()
     else
       Result.error("Size both vectors must be same!")
+    end
+  end
+
+  @doc """
+  Inner product of two a row vectors. It produces a row vector where each
+  element `i, j` is the product of elements `i, j` of the original two
+  row vectors. These two vectors must have a same size. Otherwise you get
+  an error message.
+
+  Returns result, it means either tuple of {:ok, vector} or {:error, "msg"}.
+
+  ## Examples
+
+      iex> MatrixReloaded.Vector.inner_product([1, 2, 3], [4, 5, 6])
+      {:ok, [4, 10, 18]}
+
+  """
+
+  @spec inner_product(t(), t()) :: Result.t(String.t(), t())
+  def inner_product([hd1 | _tl1], [hd2 | _tl2]) when is_list(hd1) or is_list(hd2) do
+    Result.error("Vectors must be row type!")
+  end
+
+  def inner_product(vec1, vec2) do
+    if size(vec1) == size(vec2) do
+      [vec1, vec2]
+      |> List.zip()
+      |> Enum.map(fn {x, y} -> x * y end)
+      |> Result.ok()
+    else
+      Result.error("Size both vectors must be same!")
+    end
+  end
+
+  @doc """
+  Outer product of two a row vectors. It produces a matrix of dimension
+  `{m, n}` where `m` and `n` are length (size) of row vectors. If input
+  vectors aren't a row type you get an error message.
+
+  Returns result, it means either tuple of {:ok, matrix} or {:error, "msg"}.
+
+  ## Examples
+
+    iex> MatrixReloaded.Vector.outer_product([1, 2, 3, 4], [1, 2, 3])
+    {:ok,
+        [
+          [1, 2, 3],
+          [2, 4, 6],
+          [3, 6, 9],
+          [4, 8, 12]
+        ]
+      }
+
+  """
+
+  @spec outer_product(t(), t()) :: Result.t(String.t(), Matrix.t())
+  def outer_product([hd1 | _tl1], [hd2 | _tl2]) when is_list(hd1) or is_list(hd2) do
+    Result.error("Vectors must be row type!")
+  end
+
+  def outer_product(vec1, vec2) do
+    if 1 < size(vec1) and 1 < size(vec2) do
+      vec1
+      |> Enum.map(fn el -> mult_by_num(vec2, el) end)
+      |> Result.ok()
+    else
+      Result.error("Vectors must contain at least two values!")
     end
   end
 
@@ -173,6 +253,10 @@ defmodule MatrixReloaded.Vector do
   """
 
   @spec mult_by_num(t(), number) :: t()
+  def mult_by_num([hd1 | _tl1]) when is_list(hd1) do
+    Result.error("Vector must be row type!")
+  end
+
   def mult_by_num(vec, val) do
     Enum.map(vec, fn x -> x * val end)
   end
