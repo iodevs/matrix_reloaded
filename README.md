@@ -1,4 +1,6 @@
 # MatrixReloaded
+[![Build Status](https://semaphoreci.com/api/v1/s-m-i-t-a/matrix_reloaded/branches/master/badge.svg)](https://semaphoreci.com/s-m-i-t-a/matrix_reloaded)
+
 
 **TODO: Add description**
 
