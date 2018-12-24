@@ -814,7 +814,7 @@ defmodule MatrixReloaded.Matrix do
       {:ok, :ok}
 
   """
-  @spec save_csv(t(), String.t()) :: Result.t(String.t(), any())
+  @spec save_csv(t(), String.t()) :: Result.t(String.t(), :ok)
   def save_csv(matrix, file_name \\ "matrix.csv") do
     file_name
     |> File.open([:write], fn file ->
