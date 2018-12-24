@@ -19,3 +19,6 @@ Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_do
 and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
 be found at [https://hexdocs.pm/matrix_reloaded](https://hexdocs.pm/matrix_reloaded).
 
+
+## License
+[![MIT](https://img.shields.io/packagist/l/doctrine/orm.svg)](https://github.com/iodevs/matrix_reloaded/blob/master/LICENSE)
