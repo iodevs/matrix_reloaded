@@ -2,7 +2,14 @@
 [![Build Status](https://semaphoreci.com/api/v1/s-m-i-t-a/matrix_reloaded/branches/master/badge.svg)](https://semaphoreci.com/s-m-i-t-a/matrix_reloaded)
 
 
-**TODO: Add description**
+This a library is focusing only on updating, rearranging, getting/dropping
+row/column of a matrix. Also contains a few matrix operations like addition,
+subtraction or multiplication. Anyway if you need make fast operations on
+matrices, please use [Matrex](https://hexdocs.pm/matrex/Matrex.html) library.
+
+
+## TODO: add example
+
 
 ## Installation
 
@@ -16,6 +23,8 @@ def deps do
   ]
 end
 ```
+
+## Documentation
 
 Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
 and published on [HexDocs](https://hexdocs.pm). Once published, the docs can

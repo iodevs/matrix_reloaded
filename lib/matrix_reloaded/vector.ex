@@ -1,14 +1,19 @@
 defmodule MatrixReloaded.Vector do
   @moduledoc """
   Provides a set of functions to work with vectors.
+
+  Mostly functions is written for a row vectors. So if you'll need a similar
+  functionality even for a column vectors you can use `transpose` function
+  on row vector.
   """
+
   alias MatrixReloaded.Matrix
 
   @type t :: list(number)
 
   @doc """
   Create a row vector of the specified size. Default values of vector
-  is set to 0. This value can be changed. See example below.
+  is set to `0`. This value can be changed.
 
   Returns list of numbers.
 
@@ -29,7 +34,7 @@ defmodule MatrixReloaded.Vector do
 
   @doc """
   Create a column vector of the specified size. Default values of vector
-  is set to 0. This value can be changed. See example below.
+  is set to `0`. This value can be changed.
 
   Returns list of list number.
 
@@ -91,7 +96,7 @@ defmodule MatrixReloaded.Vector do
   Addition of two a row vectors. These two vectors must have a same size.
   Otherwise you get an error message.
 
-  Returns result, it means either tuple of {:ok, vector} or {:error, "msg"}.
+  Returns result, it means either tuple of `{:ok, vector}` or `{:error, "msg"}`.
 
   ## Examples
 
@@ -101,7 +106,7 @@ defmodule MatrixReloaded.Vector do
   """
 
   @spec add(t(), t()) :: Result.t(String.t(), t())
-  def add([hd1 | _tl1], [hd2 | _tl2]) when is_list(hd1) or is_list(hd2) do
+  def add([hd1 | _], [hd2 | _]) when is_list(hd1) or is_list(hd2) do
     Result.error("Vectors must be row type!")
   end
 
@@ -120,7 +125,7 @@ defmodule MatrixReloaded.Vector do
   Subtraction of two a row vectors. These two vectors must have a same size.
   Otherwise you get an error message.
 
-  Returns result, it means either tuple of {:ok, vector} or {:error, "msg"}.
+  Returns result, it means either tuple of `{:ok, vector}` or `{:error, "msg"}`.
 
   ## Examples
 
@@ -130,7 +135,7 @@ defmodule MatrixReloaded.Vector do
   """
 
   @spec sub(t(), t()) :: Result.t(String.t(), t())
-  def sub([hd1 | _tl1], [hd2 | _tl2]) when is_list(hd1) or is_list(hd2) do
+  def sub([hd1 | _], [hd2 | _]) when is_list(hd1) or is_list(hd2) do
     Result.error("Vectors must be row type!")
   end
 
@@ -159,7 +164,7 @@ defmodule MatrixReloaded.Vector do
   """
 
   @spec dot(t(), t()) :: Result.t(String.t(), number)
-  def dot([hd1 | _tl1], [hd2 | _tl2]) when is_list(hd1) or is_list(hd2) do
+  def dot([hd1 | _], [hd2 | _]) when is_list(hd1) or is_list(hd2) do
     Result.error("Vectors must be row type!")
   end
 
@@ -181,7 +186,7 @@ defmodule MatrixReloaded.Vector do
   row vectors. These two vectors must have a same size. Otherwise you get
   an error message.
 
-  Returns result, it means either tuple of {:ok, vector} or {:error, "msg"}.
+  Returns result, it means either tuple of `{:ok, vector}` or `{:error, "msg"}`.
 
   ## Examples
 
@@ -191,7 +196,7 @@ defmodule MatrixReloaded.Vector do
   """
 
   @spec inner_product(t(), t()) :: Result.t(String.t(), t())
-  def inner_product([hd1 | _tl1], [hd2 | _tl2]) when is_list(hd1) or is_list(hd2) do
+  def inner_product([hd1 | _], [hd2 | _]) when is_list(hd1) or is_list(hd2) do
     Result.error("Vectors must be row type!")
   end
 
@@ -211,24 +216,24 @@ defmodule MatrixReloaded.Vector do
   `{m, n}` where `m` and `n` are length (size) of row vectors. If input
   vectors aren't a row type you get an error message.
 
-  Returns result, it means either tuple of {:ok, matrix} or {:error, "msg"}.
+  Returns result, it means either tuple of `{:ok, matrix}` or `{:error, "msg"}`.
 
   ## Examples
 
-    iex> MatrixReloaded.Vector.outer_product([1, 2, 3, 4], [1, 2, 3])
-    {:ok,
-        [
-          [1, 2, 3],
-          [2, 4, 6],
-          [3, 6, 9],
-          [4, 8, 12]
-        ]
-      }
+      iex> MatrixReloaded.Vector.outer_product([1, 2, 3, 4], [1, 2, 3])
+      {:ok,
+          [
+            [1, 2, 3],
+            [2, 4, 6],
+            [3, 6, 9],
+            [4, 8, 12]
+          ]
+        }
 
   """
 
   @spec outer_product(t(), t()) :: Result.t(String.t(), Matrix.t())
-  def outer_product([hd1 | _tl1], [hd2 | _tl2]) when is_list(hd1) or is_list(hd2) do
+  def outer_product([hd1 | _], [hd2 | _]) when is_list(hd1) or is_list(hd2) do
     Result.error("Vectors must be row type!")
   end
 
@@ -243,18 +248,24 @@ defmodule MatrixReloaded.Vector do
   end
 
   @doc """
-  Multiply a row vector by number.
+  Multiply a vector by number.
 
   ## Examples
 
       iex> MatrixReloaded.Vector.row(3, 2) |> MatrixReloaded.Vector.mult_by_num(3)
       [6, 6, 6]
 
+      iex> MatrixReloaded.Vector.col(3, 2) |> MatrixReloaded.Vector.mult_by_num(3)
+      [[6], [6], [6]]
+
   """
 
   @spec mult_by_num(t(), number) :: t()
-  def mult_by_num([hd1 | _tl1]) when is_list(hd1) do
-    Result.error("Vector must be row type!")
+  def mult_by_num([hd | _] = vec, val) when is_list(hd) do
+    vec
+    |> transpose()
+    |> mult_by_num(val)
+    |> transpose()
   end
 
   def mult_by_num(vec, val) do

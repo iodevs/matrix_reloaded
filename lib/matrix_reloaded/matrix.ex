@@ -1,22 +1,24 @@
 defmodule MatrixReloaded.Matrix do
   @moduledoc """
   Provides a set of functions to work with matrices.
+
+  Don't forget, numbering of row and column starts from `0` and goes
+  to `m - 1` and `n - 1` where `{m, n}` is dimension (size) of matrix.
   """
   alias MatrixReloaded.Vector
 
-  @type vector :: Vector.t()
   @type t :: [Vector.t()]
   @type dimension :: {pos_integer, pos_integer} | pos_integer
   @type index :: {non_neg_integer, non_neg_integer}
-  @type element :: number | vector | t()
+  @type element :: number | Vector.t() | t()
 
   @doc """
-  Create a new matrix of the specified size (number of rows and columns).
-  Values `row` and `column` must be positive integer. Otherwise you get error
-  message. All elements of the matrix are filled with the default value 0.
-  This value can be changed. See example below.
+  Create a new matrix of the specified size. In case of positive number you get
+  a squared matrix, for tuple `{m, n}` you get a rectangular matrix. For negative
+  values you get an error message. All elements of the matrix are filled with the
+  default value 0. This value can be changed.
 
-  Returns result, it means either tuple of {:ok, matrix} or {:error, "msg"}.
+  Returns result, it means either tuple of `{:ok, matrix}` or `{:error, "msg"}`.
 
   ## Examples
 
@@ -57,9 +59,9 @@ defmodule MatrixReloaded.Matrix do
 
   @doc """
   Addition of two matrices. Sizes (dimensions) of both matrices must be same.
-  Otherwise you get error message.
+  Otherwise you get an error message.
 
-  Returns result, it means either tuple of {:ok, matrix} or {:error, "msg"}.
+  Returns result, it means either tuple of `{:ok, matrix}` or `{:error, "msg"}`.
 
   ## Examples
 
@@ -94,9 +96,9 @@ defmodule MatrixReloaded.Matrix do
 
   @doc """
   Subtraction of two matrices. Sizes (dimensions) of both matrices must be same.
-  Otherwise you get error message.
+  Otherwise you get an error message.
 
-  Returns result, it means either tuple of {:ok, matrix} or {:error, "msg"}.
+  Returns result, it means either tuple of `{:ok, matrix}` or `{:error, "msg"}`.
 
   ## Examples
 
@@ -131,10 +133,10 @@ defmodule MatrixReloaded.Matrix do
 
   @doc """
   Product of two matrices. If matrix `A` has a size `n × p` and matrix `B` has
-  a size `p × m` then their matrix product `AB` is matrix of size `n × m`.
-  Otherwise you get error message.
+  a size `p × m` then their matrix product `A*B` is matrix of size `n × m`.
+  Otherwise you get an error message.
 
-  Returns result, it means either tuple of {:ok, matrix} or {:error, "msg"}.
+  Returns result, it means either tuple of `{:ok, matrix}` or `{:error, "msg"}`.
 
   ## Examples
 
@@ -174,9 +176,9 @@ defmodule MatrixReloaded.Matrix do
   Schur product (or the Hadamard product) of two matrices. It produces another
   matrix where each element `i, j` is the product of elements `i, j` of the
   original two matrices. Sizes (dimensions) of both matrices must be same.
-  Otherwise you get error message.
+  Otherwise you get an error message.
 
-  Returns result, it means either tuple of {:ok, matrix} or {:error, "msg"}.
+  Returns result, it means either tuple of `{:ok, matrix}` or `{:error, "msg"}`.
 
   ## Examples
 
@@ -211,10 +213,10 @@ defmodule MatrixReloaded.Matrix do
   @doc """
   Updates the matrix by given a submatrix. The position of submatrix inside matrix
   is given by index `{from_row, from_col}` and dimension of submatrix. Size of
-  submatrix must be less than or equal to size of matrix. Otherwise you get error message.
-  The values of indices start from 0 to (matrix row size - 1). Similarly for col size.
+  submatrix must be less than or equal to size of matrix. Otherwise you get an error message.
+  The values of indices start from `0` to `matrix row size - 1`. Similarly for `col` size.
 
-  Returns result, it means either tuple of {:ok, matrix} or {:error, "msg"}.
+  Returns result, it means either tuple of `{:ok, matrix}` or `{:error, "msg"}`.
 
   ##  Example:
 
@@ -242,9 +244,9 @@ defmodule MatrixReloaded.Matrix do
   @doc """
   Updates the matrix by given a number. The position of element in matrix
   which you want to change is given by two non negative integers. These numbers
-  must be from 0 to (matrix row size - 1). Similarly for col size.
+  must be from `0` to `matrix row size - 1`. Similarly for `col` size.
 
-  Returns result, it means either tuple of {:ok, matrix} or {:error, "msg"}.
+  Returns result, it means either tuple of `{:ok, matrix}` or `{:error, "msg"}`.
 
   ##  Example:
 
@@ -268,7 +270,7 @@ defmodule MatrixReloaded.Matrix do
   columns which you want to change is given by tuple `{row, col}`. Both values
   are non negative integers.
 
-  Returns result, it means either tuple of {:ok, matrix} or {:error, "msg"}.
+  Returns result, it means either tuple of `{:ok, matrix}` or `{:error, "msg"}`.
 
   ##  Example:
 
@@ -294,7 +296,7 @@ defmodule MatrixReloaded.Matrix do
   The column and rows which you want to change is given by tuple `{row, col}`.
   Both values are non negative integers.
 
-  Returns result, it means either tuple of {:ok, matrix} or {:error, "msg"}.
+  Returns result, it means either tuple of `{:ok, matrix}` or `{:error, "msg"}`.
 
   ##  Example:
 
@@ -321,7 +323,7 @@ defmodule MatrixReloaded.Matrix do
   tuple of two numbers. These two numbers are row and column of matrix where the
   submatrices will be located. All submatrices must have same size (dimension).
 
-  Returns result, it means either tuple of {:ok, matrix} or {:error, "msg"}.
+  Returns result, it means either tuple of `{:ok, matrix}` or `{:error, "msg"}`.
 
   ##  Example:
 
@@ -362,7 +364,7 @@ defmodule MatrixReloaded.Matrix do
   submatrix is given by positive number (result then will be square matrix) or tuple
   of two positive numbers (you get then a rectangular matrix).
 
-  Returns result, it means either tuple of {:ok, matrix} or {:error, "msg"}.
+  Returns result, it means either tuple of `{:ok, matrix}` or `{:error, "msg"}`.
 
   ##  Example:
 
@@ -417,7 +419,7 @@ defmodule MatrixReloaded.Matrix do
   @doc """
   Get a row from the matrix. By index you can select the row which you want.
 
-  Returns result, it means either tuple of {:ok, vector} or {:error, "msg"}.
+  Returns result, it means either tuple of `{:ok, vector}` or `{:error, "msg"}`.
 
   ##  Example:
 
@@ -461,7 +463,7 @@ defmodule MatrixReloaded.Matrix do
   @doc """
   Get a column from the matrix. By index you can select the column which you want.
 
-  Returns result, it means either tuple of {:ok, matrix} or {:error, "msg"}.
+  Returns result, it means either tuple of `{:ok, matrix}` or `{:error, "msg"}`.
 
   ##  Example:
 
@@ -494,10 +496,10 @@ defmodule MatrixReloaded.Matrix do
 
   @doc """
   Creates a square diagonal matrix with the elements of vector on the main diagonal
-  or on lower/upper bidiagonal if diagonal number `k` is k < 0 or 0 < k. This number
-  must be integer.
+  or on lower/upper bidiagonal if diagonal number `k` is `k < 0` or `0 < k`. This number
+  `k` must be integer.
 
-  Returns result, it means either tuple of {:ok, matrix} or {:error, "msg"}.
+  Returns result, it means either tuple of `{:ok, matrix}` or `{:error, "msg"}`.
 
   ##  Example:
       iex> MatrixReloaded.Matrix.diag([1, 2, 3])
@@ -551,7 +553,7 @@ defmodule MatrixReloaded.Matrix do
   @doc """
   Transpose of matrix.
 
-  Returns result, it means either tuple of {:ok, matrix} or {:error, "msg"}.
+  Returns result, it means either tuple of `{:ok, matrix}` or `{:error, "msg"}`.
 
   ##  Example:
 
@@ -576,7 +578,7 @@ defmodule MatrixReloaded.Matrix do
   @doc """
   Flip columns of matrix in the left-right direction (i.e. about a vertical axis).
 
-  Returns result, it means either tuple of {:ok, matrix} or {:error, "msg"}.
+  Returns result, it means either tuple of `{:ok, matrix}` or `{:error, "msg"}`.
 
   ##  Example:
 
@@ -601,7 +603,7 @@ defmodule MatrixReloaded.Matrix do
   @doc """
   Flip rows of matrix in the up-down direction (i.e. about a horizontal axis).
 
-  Returns result, it means either tuple of {:ok, matrix} or {:error, "msg"}.
+  Returns result, it means either tuple of `{:ok, matrix}` or `{:error, "msg"}`.
 
   ##  Example:
 
@@ -627,7 +629,7 @@ defmodule MatrixReloaded.Matrix do
   Drop the row or list of rows from the matrix. The row (or rows) must be positive
   integer.
 
-  Returns result, it means either tuple of {:ok, matrix} or {:error, "msg"}.
+  Returns result, it means either tuple of `{:ok, matrix}` or `{:error, "msg"}`.
 
   ##  Example:
       iex> mat = {:ok, [[0, 0, 0, 0], [0, 0, 1, 2], [0, 0, 3, 4], [0, 0, 0, 0]]}
@@ -650,7 +652,7 @@ defmodule MatrixReloaded.Matrix do
       }
 
   """
-  @spec drop_row(t(), pos_integer | vector) :: Result.t(String.t(), t())
+  @spec drop_row(t(), pos_integer | Vector.t()) :: Result.t(String.t(), t())
   def drop_row(matrix, row) when is_list(row) and length(row) != 0 do
     make_drop_rows(matrix, row)
   end
@@ -667,7 +669,7 @@ defmodule MatrixReloaded.Matrix do
   Drop the column or list of columns from the matrix. The column (or columns)
   must be positive integer.
 
-  Returns result, it means either tuple of {:ok, matrix} or {:error, "msg"}.
+  Returns result, it means either tuple of `{:ok, matrix}` or `{:error, "msg"}`.
 
   ##  Example:
       iex> mat = {:ok, [[0, 0, 0, 0], [0, 0, 1, 2], [0, 0, 3, 4], [0, 0, 0, 0]]}
@@ -693,7 +695,7 @@ defmodule MatrixReloaded.Matrix do
       }
 
   """
-  @spec drop_col(t(), pos_integer | vector) :: Result.t(String.t(), t())
+  @spec drop_col(t(), pos_integer | Vector.t()) :: Result.t(String.t(), t())
   def drop_col(matrix, col) when is_list(col) and length(col) != 0 do
     matrix
     |> transpose()
@@ -715,7 +717,7 @@ defmodule MatrixReloaded.Matrix do
   @doc """
   Concatenate matrices horizontally. Both matrices must have same rows dimension.
 
-  Returns result, it means either tuple of {:ok, matrix} or {:error, "msg"}.
+  Returns result, it means either tuple of `{:ok, matrix}` or `{:error, "msg"}`.
 
   ##  Example:
       iex> mat1 = MatrixReloaded.Matrix.diag([1, 1, 1])
@@ -748,7 +750,7 @@ defmodule MatrixReloaded.Matrix do
   @doc """
   Concatenate matrices vertically. Both matrices must have same columns dimension.
 
-  Returns result, it means either tuple of {:ok, matrix} or {:error, "msg"}.
+  Returns result, it means either tuple of `{:ok, matrix}` or `{:error, "msg"}`.
 
   ##  Example:
       iex> mat1 = MatrixReloaded.Matrix.diag([1, 1, 1])
@@ -796,7 +798,8 @@ defmodule MatrixReloaded.Matrix do
 
   @doc """
   Save a matrix to csv file at a project root directory. Default name
-  of csv file is `matrix.csv`. Or you can set a path to save dir.
+  of csv file is `matrix.csv`. Or you can set a path to save dir and file name
+  (e.g. `/tmp/matrix.csv`).
 
   Returns result, it means either tuple of {:ok, :ok} or {:error, "msg"}.
 
