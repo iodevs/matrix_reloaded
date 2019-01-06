@@ -5,12 +5,13 @@ defmodule MatrixReloaded.Matrix do
   Don't forget, numbering of row and column starts from `0` and goes
   to `m - 1` and `n - 1` where `{m, n}` is dimension (size) of matrix.
   """
+
   alias MatrixReloaded.Vector
 
   @type t :: [Vector.t()]
   @type dimension :: {pos_integer, pos_integer} | pos_integer
   @type index :: {non_neg_integer, non_neg_integer}
-  @type element :: number | Vector.t() | t()
+  @type submatrix :: number | Vector.t() | t()
 
   @doc """
   Create a new matrix of the specified size. In case of positive number you get
@@ -32,8 +33,15 @@ defmodule MatrixReloaded.Matrix do
   @spec new(dimension, number) :: Result.t(String.t(), t())
   def new(dimension, val \\ 0)
 
-  def new({rows, cols}, val)
-      when is_integer(rows) and rows > 0 and is_integer(cols) and cols > 0 do
+  def new(dim, _val) when 2 != tuple_size(dim) do
+    Result.error(
+      "The size of matrix must be in the form {m, n} where integers are m > 0 and n > 0!"
+    )
+  end
+
+  def new({rows, cols} = dim, val)
+      when is_tuple(dim) and tuple_size(dim) == 2 and is_integer(elem(dim, 0)) and
+             0 <= elem(dim, 0) and is_integer(elem(dim, 1)) and 0 <= elem(dim, 1) do
     for(
       _r <- 1..rows,
       do: make_row(cols, val)
@@ -41,20 +49,22 @@ defmodule MatrixReloaded.Matrix do
     |> Result.ok()
   end
 
-  def new(rows, val) when is_integer(rows) and rows > 0 do
+  def new({rows, cols}, _val) do
+    Result.error(
+      "The size {#{rows}, #{cols}} of matrix must be in the form {m, n} where m, n are positive integers!"
+    )
+  end
+
+  def new(row, val) when is_integer(row) and 0 < row do
     for(
-      _r <- 1..rows,
-      do: make_row(rows, val)
+      _r <- 1..row,
+      do: make_row(row, val)
     )
     |> Result.ok()
   end
 
-  def new({_rows, _cols}, _val) do
-    Result.error("Row or column must be positive integer!")
-  end
-
-  def new(_rows, _val) do
-    Result.error("Row or column must be positive integer!")
+  def new(_row, _val) do
+    Result.error("Dimension of squared matrix must be positive integer!")
   end
 
   @doc """
@@ -67,7 +77,7 @@ defmodule MatrixReloaded.Matrix do
 
       iex> mat1 = {:ok, [[1, 2, 3], [4, 5, 6], [7, 8, 9]]}
       iex> mat2 = MatrixReloaded.Matrix.new(3,1)
-      iex> MatrixReloaded.Matrix.and_then2(mat1, mat2, &MatrixReloaded.Matrix.add(&1, &2))
+      iex> Result.and_then_x([mat1, mat2], &MatrixReloaded.Matrix.add(&1, &2))
       {:ok,
         [
           [2, 3, 4],
@@ -104,7 +114,7 @@ defmodule MatrixReloaded.Matrix do
 
       iex> mat1 = {:ok, [[1, 2, 3], [4, 5, 6], [7, 8, 9]]}
       iex> mat2 = MatrixReloaded.Matrix.new(3,1)
-      iex> MatrixReloaded.Matrix.and_then2(mat1, mat2, &MatrixReloaded.Matrix.sub(&1, &2))
+      iex> Result.and_then_x([mat1, mat2], &MatrixReloaded.Matrix.sub(&1, &2))
       {:ok,
         [
           [0, 1, 2],
@@ -142,7 +152,7 @@ defmodule MatrixReloaded.Matrix do
 
       iex> mat1 = {:ok, [[1, 2], [3, 4], [5, 6], [7, 8]]}
       iex> mat2 = {:ok, [[1, 2 ,3], [4, 5, 6]]}
-      iex> MatrixReloaded.Matrix.and_then2(mat1, mat2, &MatrixReloaded.Matrix.product(&1, &2))
+      iex> Result.and_then_x([mat1, mat2], &MatrixReloaded.Matrix.product(&1, &2))
       {:ok,
         [
           [9, 12, 15],
@@ -184,7 +194,7 @@ defmodule MatrixReloaded.Matrix do
 
       iex> mat1 = {:ok, [[1, 2, 3], [5, 6, 7]]}
       iex> mat2 = {:ok, [[1, 2 ,3], [4, 5, 6]]}
-      iex> MatrixReloaded.Matrix.and_then2(mat1, mat2, &MatrixReloaded.Matrix.schur_product(&1, &2))
+      iex> Result.and_then_x([mat1, mat2], &MatrixReloaded.Matrix.schur_product(&1, &2))
       {:ok,
         [
           [1, 4, 9],
@@ -212,7 +222,7 @@ defmodule MatrixReloaded.Matrix do
 
   @doc """
   Updates the matrix by given a submatrix. The position of submatrix inside matrix
-  is given by index `{from_row, from_col}` and dimension of submatrix. Size of
+  is given by index `{num_row, num_col}` and dimension of submatrix. Size of
   submatrix must be less than or equal to size of matrix. Otherwise you get an error message.
   The values of indices start from `0` to `matrix row size - 1`. Similarly for `col` size.
 
@@ -220,7 +230,8 @@ defmodule MatrixReloaded.Matrix do
 
   ##  Example:
 
-      iex> MatrixReloaded.Matrix.new(4) |> Result.and_then(&MatrixReloaded.Matrix.update(&1, [[1,2],[3,4]], {1,2}))
+      iex> mat = MatrixReloaded.Matrix.new(4)
+      iex> mat |> Result.and_then(&MatrixReloaded.Matrix.update(&1, [[1,2],[3,4]], {1,2}))
       {:ok,
         [
           [0, 0, 0, 0],
@@ -231,26 +242,27 @@ defmodule MatrixReloaded.Matrix do
       }
 
   """
-  @spec update(t(), element, index) :: Result.t(String.t(), t())
+  @spec update(t(), submatrix, index) :: Result.t(String.t(), t())
   def update(matrix, submatrix, index) do
-    dim_sub = dimension_of_submatrix(index, size(submatrix))
-
     matrix
-    |> is_submatrix_smaller_than_matrix?(size(submatrix))
-    |> Result.and_then(&is_submatrix_in_matrix?(&1, dim_sub, index))
+    |> is_index_ok?(index)
+    |> Result.and_then(
+      &is_submatrix_smaller_than_matrix?(&1, size(matrix), size(submatrix), :update)
+    )
+    |> Result.and_then(&is_submatrix_in_matrix?(&1, size(matrix), size(submatrix), index))
     |> Result.map(&make_update(&1, submatrix, index))
   end
 
   @doc """
   Updates the matrix by given a number. The position of element in matrix
-  which you want to change is given by two non negative integers. These numbers
-  must be from `0` to `matrix row size - 1`. Similarly for `col` size.
+  which you want to change is given by tuple `{num_row, num_col}`.
 
   Returns result, it means either tuple of `{:ok, matrix}` or `{:error, "msg"}`.
 
   ##  Example:
 
-      iex> MatrixReloaded.Matrix.new(3) |> Result.and_then(&MatrixReloaded.Matrix.update_element(&1, -1, 1, 1))
+      iex> mat = MatrixReloaded.Matrix.new(3)
+      iex> mat |> Result.and_then(&MatrixReloaded.Matrix.update_element(&1, -1, {1, 1}))
       {:ok,
         [
           [0, 0, 0],
@@ -260,20 +272,22 @@ defmodule MatrixReloaded.Matrix do
       }
 
   """
-  @spec update_element(t(), number, non_neg_integer, non_neg_integer) :: Result.t(String.t(), t())
-  def update_element(matrix, el, row, col) when is_number(el) do
-    update(matrix, [[el]], {row, col})
+  @spec update_element(t(), number, index) :: Result.t(String.t(), t())
+  def update_element(matrix, el, index) when is_number(el) do
+    matrix
+    |> is_index_ok?(index)
+    |> Result.and_then(&is_element_in_matrix?(&1, size(matrix), index))
+    |> Result.map(&make_update(&1, [[el]], index))
   end
 
   @doc """
-  Updates row in the matrix by given a row vector (list) of numbers. The row and
-  columns which you want to change is given by tuple `{row, col}`. Both values
-  are non negative integers.
+  Updates row in the matrix by given a row vector (list) of numbers. The row which
+  you want to change is given by tuple `{num_row, num_col}`. Both values are non
+  negative integers.
 
   Returns result, it means either tuple of `{:ok, matrix}` or `{:error, "msg"}`.
 
   ##  Example:
-
       iex> {:ok, mat} = MatrixReloaded.Matrix.new(4)
       iex> MatrixReloaded.Matrix.update_row(mat, [1, 2, 3], {3, 1})
       {:ok,
@@ -286,14 +300,19 @@ defmodule MatrixReloaded.Matrix do
       }
 
   """
-  @spec update_row(t(), element, index) :: Result.t(String.t(), t())
-  def update_row(matrix, submatrix, index) do
-    update(matrix, [submatrix], index)
+  @spec update_row(t(), Vector.t(), index) :: Result.t(String.t(), t())
+  def update_row(matrix, row, index) do
+    matrix
+    |> is_index_ok?(index)
+    |> Result.and_then(&is_row_ok?(&1, row))
+    |> Result.and_then(&is_row_size_smaller_than_rows_of_matrix?(&1, size(matrix), length(row)))
+    |> Result.and_then(&is_row_in_matrix?(&1, size(matrix), length(row), index))
+    |> Result.map(&make_update(&1, [row], index))
   end
 
   @doc """
   Updates column in the matrix by given a column vector (list) of numbers.
-  The column and rows which you want to change is given by tuple `{row, col}`.
+  The column which you want to change is given by tuple `{num_row, num_col}`.
   Both values are non negative integers.
 
   Returns result, it means either tuple of `{:ok, matrix}` or `{:error, "msg"}`.
@@ -312,16 +331,17 @@ defmodule MatrixReloaded.Matrix do
       }
 
   """
-  @spec update_col(t(), element, index) :: Result.t(String.t(), t())
-  def update_col(matrix, submatrix, index) do
+  @spec update_col(t(), t(), index) :: Result.t(String.t(), t())
+  def update_col(matrix, [hd | _] = submatrix, index)
+      when is_list(submatrix) and length(hd) == 1 do
     update(matrix, submatrix, index)
   end
 
   @doc """
   Updates the matrix by given a submatrices. The positions (or locations) of these
   submatrices are given by list of indices. Index of the individual submatrices is
-  tuple of two numbers. These two numbers are row and column of matrix where the
-  submatrices will be located. All submatrices must have same size (dimension).
+  tuple of two numbers. These two numbers are number row and number column of matrix
+  where the submatrices will be located. All submatrices must have same size (dimension).
 
   Returns result, it means either tuple of `{:ok, matrix}` or `{:error, "msg"}`.
 
@@ -342,21 +362,11 @@ defmodule MatrixReloaded.Matrix do
       }
 
   """
-  @spec update_map(t(), element, list(index)) :: Result.t(String.t(), t())
-  def update_map(matrix, submatrix, positions) do
-    {row, col, check_size} = and_then2(matrix, submatrix, &check_size(&1, &2, positions))
-
-    if check_size do
-      Enum.reduce(positions, matrix, fn position, acc ->
-        and_then2(
-          acc,
-          submatrix,
-          &update(&1, &2, position)
-        )
-      end)
-    else
-      Result.error("Bad value of position {#{row}, #{col}}. Submatrix is out of matrix!")
-    end
+  @spec update_map(t(), submatrix, list(index)) :: Result.t(String.t(), t())
+  def update_map(matrix, submatrix, position_indices) do
+    Enum.reduce(position_indices, matrix, fn position, acc ->
+      Result.and_then_x([acc, submatrix], &update(&1, &2, position))
+    end)
   end
 
   @doc """
@@ -392,15 +402,16 @@ defmodule MatrixReloaded.Matrix do
     dim_sub = dimension_of_submatrix(index, dimension)
 
     matrix
-    |> is_submatrix_smaller_than_matrix?(dim_sub)
-    |> Result.and_then(&is_submatrix_in_matrix?(&1, index, dim_sub))
+    |> is_index_ok?(index)
+    |> Result.and_then(&is_submatrix_smaller_than_matrix?(&1, size(matrix), dim_sub, :get))
+    |> Result.and_then(&is_submatrix_in_matrix?(&1, size(matrix), index, dim_sub, :get))
     |> Result.map(&make_get_submatrix(&1, index, dim_sub))
   end
 
   @doc """
   Get a element from the matrix. By index you can select an element.
 
-  Returns result, it means either tuple of {:ok, number} or {:error, "msg"}.
+  Returns result, it means either tuple of `{:ok, number}` or `{:error, "msg"}`.
 
   ##  Example:
 
@@ -411,21 +422,43 @@ defmodule MatrixReloaded.Matrix do
   """
   @spec get_element(t(), index) :: Result.t(String.t(), number)
   def get_element(matrix, index) when is_tuple(index) do
+    dim_sub = dimension_of_submatrix(index, 1)
+
     matrix
-    |> get_submatrix(index, 1)
+    |> is_element_in_matrix?(size(matrix), index, :get)
+    |> Result.map(&make_get_submatrix(&1, index, dim_sub))
     |> Result.map(fn el -> el |> hd |> hd end)
   end
 
   @doc """
-  Get a row from the matrix. By index you can select the row which you want.
+  Get a whole row from the matrix. By row number you can select the row which you want.
 
-  Returns result, it means either tuple of `{:ok, vector}` or `{:error, "msg"}`.
+  Returns result, it means either tuple of `{:ok, number}` or `{:error, "msg"}`.
 
   ##  Example:
 
       iex> mat = {:ok, [[0, 0, 0, 0], [0, 0, 1, 2], [0, 0, 3, 4], [0, 0, 0, 0]]}
-      iex> mat |> Result.and_then(&MatrixReloaded.Matrix.get_row(&1, {1, 0}))
+      iex> mat |> Result.and_then(&MatrixReloaded.Matrix.get_row(&1, 1))
       {:ok, [0, 0, 1, 2]}
+
+  """
+  @spec get_row(t(), non_neg_integer) :: Result.t(String.t(), Vector.t())
+  def get_row(matrix, row_num) do
+    {rs, cs} = size(matrix)
+
+    matrix
+    |> is_non_neg_integer?(row_num)
+    |> Result.and_then(&is_row_num_at_matrix?(&1, {rs, cs}, row_num))
+    |> Result.map(&make_get_submatrix(&1, {row_num, 0}, {row_num, cs}))
+    |> Result.map(&hd(&1))
+  end
+
+  @doc """
+  Get a part row from the matrix. By index you can select the row which you want.
+
+  Returns result, it means either tuple of `{:ok, number}` or `{:error, "msg"}`.
+
+  ##  Example:
 
       iex> mat = {:ok, [[0, 0, 0, 0], [0, 0, 1, 2], [0, 0, 3, 4], [0, 0, 0, 0]]}
       iex> mat |> Result.and_then(&MatrixReloaded.Matrix.get_row(&1, {2, 1}, 2))
@@ -433,43 +466,50 @@ defmodule MatrixReloaded.Matrix do
 
   """
   @spec get_row(t(), index, non_neg_integer) :: Result.t(String.t(), Vector.t())
-  def get_row(matrix, index, num_of_el \\ 0)
-
-  def get_row(_matrix, _index, num_of_el) when 1 == num_of_el do
-    Result.error("If you want just one element of matrix, use function `get_element`.")
-  end
-
-  def get_row(_matrix, _index, num_of_el) when is_float(num_of_el) or num_of_el < 0 do
-    Result.error("Number of element must be positive number!")
-  end
-
-  def get_row(matrix, {from_row, _from_col} = index, num_of_el)
-      when is_integer(num_of_el) do
-    {size_row, _size_col} = size(matrix)
-
-    dim =
-      if num_of_el == 0 do
-        size_row
-      else
-        num_of_el
-      end
+  def get_row(matrix, {row_num, _} = index, num_of_el) do
+    {rs, cs} = size(matrix)
 
     matrix
-    |> is_row_in_matrix?(index, dim)
-    |> Result.map(&make_get_submatrix(&1, index, {from_row, dim}))
+    |> is_index_ok?(index)
+    |> Result.and_then(&is_positive_integer?(&1, num_of_el))
+    |> Result.and_then(&is_row_num_at_matrix?(&1, {rs, cs}, row_num))
+    |> Result.map(&make_get_submatrix(&1, index, {row_num, num_of_el}))
     |> Result.map(&hd(&1))
   end
 
   @doc """
-  Get a column from the matrix. By index you can select the column which you want.
+  Get a whole column from the matrix. By column number you can select the column
+  which you want.
 
-  Returns result, it means either tuple of `{:ok, matrix}` or `{:error, "msg"}`.
+  Returns result, it means either tuple of `{:ok, number}` or `{:error, "msg"}`.
 
   ##  Example:
 
       iex> mat = {:ok, [[0, 0, 0, 0], [0, 0, 1, 2], [0, 0, 3, 4], [0, 0, 0, 0]]}
-      iex> mat |> Result.and_then(&MatrixReloaded.Matrix.get_col(&1, {0, 3}))
+      iex> mat |> Result.and_then(&MatrixReloaded.Matrix.get_col(&1, 3))
       {:ok, [[0], [2], [4], [0]]}
+
+  """
+  @spec get_col(t(), non_neg_integer) :: Result.t(String.t(), t())
+  def get_col(matrix, col_num) do
+    {rs, cs} = size(matrix)
+
+    matrix
+    |> is_non_neg_integer?(col_num)
+    |> Result.and_then(&transpose(&1))
+    |> Result.and_then(&is_row_num_at_matrix?(&1, {rs, cs}, col_num, :column))
+    |> Result.map(&make_get_submatrix(&1, {col_num, 0}, {col_num, cs}))
+    |> Result.map(&hd(&1))
+    |> Result.map(&Vector.transpose(&1))
+  end
+
+  @doc """
+  Get a part column from the matrix. By column number you can select the column
+  which you want.
+
+  Returns result, it means either tuple of `{:ok, matrix}` or `{:error, "msg"}`.
+
+  ##  Example:
 
       iex> mat = {:ok, [[0, 0, 0, 0], [0, 0, 1, 2], [0, 0, 3, 4], [0, 0, 0, 0]]}
       iex> mat |> Result.and_then(&MatrixReloaded.Matrix.get_col(&1, {1, 2}, 2))
@@ -477,20 +517,16 @@ defmodule MatrixReloaded.Matrix do
 
   """
   @spec get_col(t(), index, non_neg_integer) :: Result.t(String.t(), t())
-  def get_col(matrix, index, num_of_el \\ 0)
+  def get_col(matrix, {row_num, col_num} = index, num_of_el) do
+    {rs, cs} = size(matrix)
 
-  def get_col(_matrix, _index, num_of_el) when 1 == num_of_el do
-    Result.error("If you want just one element of matrix, use function `get_element`.")
-  end
-
-  def get_col(_matrix, _index, num_of_el) when is_float(num_of_el) or num_of_el < 0 do
-    Result.error("Number of element must be positive number!")
-  end
-
-  def get_col(matrix, {from_row, from_col}, num_of_el) when is_integer(num_of_el) do
     matrix
-    |> transpose()
-    |> Result.and_then(&get_row(&1, {from_col, from_row}, num_of_el))
+    |> is_index_ok?(index)
+    |> Result.and_then(&is_positive_integer?(&1, num_of_el))
+    |> Result.and_then(&transpose(&1))
+    |> Result.and_then(&is_row_num_at_matrix?(&1, {cs, rs}, col_num, :column))
+    |> Result.map(&make_get_submatrix(&1, {col_num, row_num}, {col_num, num_of_el}))
+    |> Result.map(&hd(&1))
     |> Result.map(&Vector.transpose(&1))
   end
 
@@ -530,7 +566,7 @@ defmodule MatrixReloaded.Matrix do
     if k <= len do
       0..(len - 1)
       |> Enum.reduce(new(len + k), fn i, acc ->
-        acc |> Result.and_then(&update_element(&1, Enum.at(vector, i), i, i + k))
+        acc |> Result.and_then(&update_element(&1, Enum.at(vector, i), {i, i + k}))
       end)
     else
       Result.error("Length of upper bidiagonal must be less or equal to length of vector!")
@@ -543,7 +579,7 @@ defmodule MatrixReloaded.Matrix do
     if abs(k) <= len do
       0..(len - 1)
       |> Enum.reduce(new(len - k), fn i, acc ->
-        acc |> Result.and_then(&update_element(&1, Enum.at(vector, i), i - k, i))
+        acc |> Result.and_then(&update_element(&1, Enum.at(vector, i), {i - k, i}))
       end)
     else
       Result.error("Length of lower bidiagonal must be less or equal to length of vector!")
@@ -626,8 +662,8 @@ defmodule MatrixReloaded.Matrix do
   end
 
   @doc """
-  Drop the row or list of rows from the matrix. The row (or rows) must be positive
-  integer.
+  Drop the row or list of rows from the matrix. The row number (or row numbers)
+  must be positive integer.
 
   Returns result, it means either tuple of `{:ok, matrix}` or `{:error, "msg"}`.
 
@@ -653,21 +689,21 @@ defmodule MatrixReloaded.Matrix do
 
   """
   @spec drop_row(t(), pos_integer | Vector.t()) :: Result.t(String.t(), t())
-  def drop_row(matrix, row) when is_list(row) and length(row) != 0 do
-    make_drop_rows(matrix, row)
+  def drop_row(matrix, rows) when is_list(rows) do
+    matrix
+    |> is_all_row_numbers_ok?(rows)
+    |> Result.and_then(&make_drop_rows(&1, rows))
   end
 
-  def drop_row(matrix, row) when is_integer(row) and 0 <= row do
-    make_drop_row(matrix, row)
-  end
-
-  def drop_row(_matrix, row) when row < 0 do
-    Result.error("Number of row must be positive number!")
+  def drop_row(matrix, row) do
+    matrix
+    |> is_non_neg_integer?(row)
+    |> Result.and_then(&make_drop_row(&1, row))
   end
 
   @doc """
-  Drop the column or list of columns from the matrix. The column (or columns)
-  must be positive integer.
+  Drop the column or list of columns from the matrix. The column number
+  (or column numbers) must be positive integer.
 
   Returns result, it means either tuple of `{:ok, matrix}` or `{:error, "msg"}`.
 
@@ -696,22 +732,20 @@ defmodule MatrixReloaded.Matrix do
 
   """
   @spec drop_col(t(), pos_integer | Vector.t()) :: Result.t(String.t(), t())
-  def drop_col(matrix, col) when is_list(col) and length(col) != 0 do
+  def drop_col(matrix, cols) when is_list(cols) do
     matrix
     |> transpose()
-    |> Result.and_then(&make_drop_rows(&1, col, "column"))
+    |> Result.and_then(&is_all_row_numbers_ok?(&1, cols))
+    |> Result.and_then(&make_drop_rows(&1, cols, :column))
     |> Result.and_then(&transpose(&1))
   end
 
-  def drop_col(matrix, col) when is_integer(col) and 0 <= col do
+  def drop_col(matrix, col) do
     matrix
     |> transpose()
-    |> Result.and_then(&make_drop_row(&1, col, "column"))
+    |> Result.and_then(&is_non_neg_integer?(&1, col))
+    |> Result.and_then(&make_drop_row(&1, col, :column))
     |> Result.and_then(&transpose(&1))
-  end
-
-  def drop_col(_matrix, col) when col < 0 do
-    Result.error("Number of column must be positive number!")
   end
 
   @doc """
@@ -722,7 +756,7 @@ defmodule MatrixReloaded.Matrix do
   ##  Example:
       iex> mat1 = MatrixReloaded.Matrix.diag([1, 1, 1])
       iex> mat2 = MatrixReloaded.Matrix.diag([2, 2, 2])
-      iex> MatrixReloaded.Matrix.and_then2(mat1, mat2, &MatrixReloaded.Matrix.concat_row(&1, &2))
+      iex> Result.and_then_x([mat1, mat2], &MatrixReloaded.Matrix.concat_row(&1, &2))
       {:ok,
         [
           [1, 0, 0, 2, 0, 0],
@@ -755,7 +789,7 @@ defmodule MatrixReloaded.Matrix do
   ##  Example:
       iex> mat1 = MatrixReloaded.Matrix.diag([1, 1, 1])
       iex> mat2 = MatrixReloaded.Matrix.diag([2, 2, 2])
-      iex> MatrixReloaded.Matrix.and_then2(mat1, mat2, &MatrixReloaded.Matrix.concat_col(&1, &2))
+      iex> Result.and_then_x([mat1, mat2], &MatrixReloaded.Matrix.concat_col(&1, &2))
       {:ok,
         [
           [1, 0, 0],
@@ -801,15 +835,15 @@ defmodule MatrixReloaded.Matrix do
   of csv file is `matrix.csv`. Or you can set a path to save dir and file name
   (e.g. `/tmp/matrix.csv`).
 
-  Returns result, it means either tuple of {:ok, :ok} or {:error, "msg"}.
+  Returns result, it means either tuple of `{:ok, :ok}` or `{:error, "msg"}`.
 
   ## Example:
 
       iex> mat_ones = MatrixReloaded.Matrix.new(3, 1)
       iex> mat_zeros = MatrixReloaded.Matrix.new(5)
       iex> mat = MatrixReloaded.Matrix.new(7, 1)
-      iex> mat = MatrixReloaded.Matrix.and_then2(mat, mat_zeros, &MatrixReloaded.Matrix.update(&1, &2, {1, 1}))
-      iex> mat = MatrixReloaded.Matrix.and_then2(mat, mat_ones, &MatrixReloaded.Matrix.update(&1, &2, {2, 2}))
+      iex> mat = Result.and_then_x([mat, mat_zeros], &MatrixReloaded.Matrix.update(&1, &2, {1, 1}))
+      iex> mat = Result.and_then_x([mat, mat_ones], &MatrixReloaded.Matrix.update(&1, &2, {2, 2}))
       iex> mat |> Result.and_then(&MatrixReloaded.Matrix.save_csv(&1))
       {:ok, :ok}
 
@@ -827,56 +861,8 @@ defmodule MatrixReloaded.Matrix do
     end)
   end
 
-  def and_then2({:ok, val1}, {:ok, val2}, f) when is_function(f, 2) do
-    f.(val1, val2)
-  end
-
-  def and_then2({:error, _} = result, _, _f), do: result
-  def and_then2(_, {:error, _} = result, _f), do: result
-
   defp make_row(0, _val), do: []
   defp make_row(n, val), do: [val] ++ make_row(n - 1, val)
-
-  defp is_submatrix_in_matrix?(matrix, {from_row, from_col}, {to_row, to_col}) do
-    {row_size, col_size} = size(matrix)
-    calculated_row_size = to_row + from_row - 1
-    calculated_col_size = to_col + from_col - 1
-
-    if calculated_row_size < row_size and calculated_col_size < col_size do
-      Result.ok(matrix)
-    else
-      Result.error(
-        "On given position {#{from_row}, #{from_col}} you can not get the submatrix size of {#{
-          calculated_row_size
-        }, #{calculated_col_size}}. A part of submatrix is outside of matrix!"
-      )
-    end
-  end
-
-  defp is_submatrix_smaller_than_matrix?(
-         matrix,
-         {size_row_sub, size_col_sub}
-       ) do
-    {row_size, col_size} = size(matrix)
-
-    if size_row_sub < row_size and size_col_sub < col_size do
-      Result.ok(matrix)
-    else
-      Result.error("Size of submatrix is same or bigger than size of matrix!")
-    end
-  end
-
-  defp is_row_in_matrix?(matrix, {from_row, from_col}, dim) do
-    {row_size, col_size} = size(matrix)
-    calculated_row_size = dim - from_row
-    calculated_col_size = dim - from_col
-
-    if calculated_row_size <= row_size and calculated_col_size <= col_size do
-      Result.ok(matrix)
-    else
-      Result.error("Size of row is bigger than row size of matrix {#{row_size}, #{col_size}}!")
-    end
-  end
 
   defp make_update(matrix, submatrix, {from_row, from_col}) do
     {to_row, to_col} = size(submatrix)
@@ -916,55 +902,31 @@ defmodule MatrixReloaded.Matrix do
     end)
   end
 
-  defp dimension_of_submatrix(index, dimension) do
-    {from_row, from_col} = index
-
-    if is_tuple(dimension) do
-      {to_row, to_col} = dimension
-      {to_row - from_row + 1, to_col - from_col + 1}
-    else
-      {dimension, dimension}
-    end
-  end
-
-  defp make_drop_rows(matrix, rows, type \\ "row") do
+  defp make_drop_rows(matrix, rows, vec \\ :row) do
     {row_size, col_size} = size(matrix)
 
-    bad_row =
-      rows
-      |> Enum.map(fn r -> r < row_size end)
-      |> Enum.find_index(fn r -> r == false end)
-
     if length(rows) < row_size do
-      if bad_row == nil do
-        row_help =
-          0..(length(rows) - 1)
-          |> Enum.to_list()
+      row_help =
+        0..(length(rows) - 1)
+        |> Enum.to_list()
 
-        rows
-        |> Vector.sub(row_help)
-        |> Result.and_then(
-          &Enum.reduce(&1, {:ok, matrix}, fn r, acc ->
-            acc |> Result.and_then(fn a -> drop_row(a, r) end)
-          end)
-        )
-      else
-        Result.error(
-          "It is not possible drop the #{type} #{Enum.at(rows, bad_row)} from matrix! Numbering of #{
-            type
-          }s begins from 0 to (matrix #{type} size - 1)."
-        )
-      end
+      rows
+      |> Vector.sub(row_help)
+      |> Result.and_then(
+        &Enum.reduce(&1, {:ok, matrix}, fn r, acc ->
+          acc |> Result.and_then(fn a -> drop_row(a, r) end)
+        end)
+      )
     else
       Result.error(
-        "It is not possible drop all the #{type}s from matrix! Matrix has dimensions {#{row_size}, #{
-          col_size
-        }}."
+        "It is not possible drop all the #{Atom.to_string(vec)}s from matrix! Matrix has dimensions {#{
+          row_size
+        }, #{col_size}}."
       )
     end
   end
 
-  defp make_drop_row(matrix, row, type \\ "row") do
+  defp make_drop_row(matrix, row, vec \\ "row") do
     {row_size, _col_size} = size(matrix)
 
     if row < row_size do
@@ -973,8 +935,8 @@ defmodule MatrixReloaded.Matrix do
       |> Result.ok()
     else
       Result.error(
-        "It is not possible drop the #{type} #{row} from matrix! Numbering of #{type}s begins from 0 to (matrix #{
-          type
+        "It is not possible drop the #{vec} #{row} from matrix! Numbering of #{vec}s begins from 0 to (matrix #{
+          vec
         } size - 1)."
       )
     end
@@ -986,20 +948,235 @@ defmodule MatrixReloaded.Matrix do
     [Enum.map(matrix, &hd/1) | make_transpose(Enum.map(matrix, &tl/1))]
   end
 
-  defp check_size(matrix, submatrix, positions) do
-    {rm, cm} = size(matrix)
-    {rs, cs} = size(submatrix)
+  defp is_submatrix_smaller_than_matrix?(
+         matrix,
+         {rs_mat, cs_mat},
+         {rs_sub, cs_sub},
+         _method
+       )
+       when rs_sub < rs_mat and cs_sub < cs_mat do
+    Result.ok(matrix)
+  end
 
-    Enum.reduce_while(
-      positions,
-      {rs, cs, true},
-      fn {row_pos, col_pos}, acc ->
-        if rs + row_pos <= rm and cs + col_pos <= cm do
-          {:cont, acc}
-        else
-          {:halt, {row_pos, col_pos, false}}
-        end
-      end
+  defp is_submatrix_smaller_than_matrix?(
+         _matrix,
+         _size_mat,
+         _size_sub,
+         :update
+       ) do
+    Result.error(
+      "You can not update the matrix. Size of submatrix is same or bigger than size of matrix!"
     )
+  end
+
+  defp is_submatrix_smaller_than_matrix?(
+         _matrix,
+         _size_mat,
+         _size_sub,
+         :get
+       ) do
+    Result.error(
+      "You can not get the submatrix. Size of submatrix is same or bigger than size of matrix!"
+    )
+  end
+
+  defp is_row_size_smaller_than_rows_of_matrix?(
+         matrix,
+         size_mat,
+         size_row,
+         method \\ :update
+       )
+
+  defp is_row_size_smaller_than_rows_of_matrix?(
+         matrix,
+         {rs_mat, _cs_mat},
+         size_r,
+         _method
+       )
+       when size_r <= rs_mat do
+    Result.ok(matrix)
+  end
+
+  defp is_row_size_smaller_than_rows_of_matrix?(
+         _matrix,
+         _size_mat,
+         _size_row,
+         method
+       ) do
+    Result.error(
+      "You can not #{Atom.to_string(method)} the matrix. Size of row is bigger than row size of matrix!"
+    )
+  end
+
+  defp is_element_in_matrix?(
+         matrix,
+         size_mat,
+         index,
+         method \\ :update
+       )
+
+  defp is_element_in_matrix?(
+         matrix,
+         {rs_mat, cs_mat},
+         {from_row, from_col},
+         _method
+       )
+       when from_row < rs_mat and from_col < cs_mat do
+    Result.ok(matrix)
+  end
+
+  defp is_element_in_matrix?(
+         _matrix,
+         _size_mat,
+         {from_row, from_col},
+         method
+       ) do
+    Result.error(
+      "You can not #{Atom.to_string(method)} the matrix on given position {#{from_row}, #{
+        from_col
+      }}. The element is outside of matrix!"
+    )
+  end
+
+  defp is_submatrix_in_matrix?(
+         matrix,
+         size_mat,
+         size_sub,
+         index,
+         method \\ :update
+       )
+
+  defp is_submatrix_in_matrix?(
+         matrix,
+         {rs_mat, cs_mat},
+         {to_row, to_col},
+         {from_row, from_col},
+         _method
+       )
+       when from_row + to_row - 1 < rs_mat and from_col + to_col - 1 < cs_mat do
+    Result.ok(matrix)
+  end
+
+  defp is_submatrix_in_matrix?(
+         _matrix,
+         _size_mat,
+         _size_sub,
+         {from_row, from_col},
+         method
+       ) do
+    Result.error(
+      "You can not #{Atom.to_string(method)} the matrix on given position {#{from_row}, #{
+        from_col
+      }}. The submatrix is outside of matrix!"
+    )
+  end
+
+  defp is_row_in_matrix?(
+         matrix,
+         size_mat,
+         size_row,
+         index,
+         method \\ :update
+       )
+
+  defp is_row_in_matrix?(
+         matrix,
+         {rs_mat, cs_mat},
+         s_row,
+         {from_row, from_col},
+         _method
+       )
+       when from_row <= rs_mat and from_col + s_row <= cs_mat do
+    Result.ok(matrix)
+  end
+
+  defp is_row_in_matrix?(
+         _matrix,
+         _size_mat,
+         _size_row,
+         {from_row, from_col},
+         method
+       ) do
+    Result.error(
+      "You can not #{Atom.to_string(method)} row in the matrix on given position {#{from_row}, #{
+        from_col
+      }}. A part of row is outside of matrix!"
+    )
+  end
+
+  defp is_row_num_at_matrix?(matrix, size_mat, row_num, vec \\ :row)
+
+  defp is_row_num_at_matrix?(matrix, {rs_mat, _cs_mat}, row_num, _vec)
+       when row_num < rs_mat do
+    Result.ok(matrix)
+  end
+
+  defp is_row_num_at_matrix?(
+         _matrix,
+         _size_mat,
+         row_num,
+         vec
+       ) do
+    Result.error(
+      "You can not get #{Atom.to_string(vec)} from the matrix. The #{Atom.to_string(vec)} number #{
+        row_num
+      } is outside of matrix!"
+    )
+  end
+
+  defp dimension_of_submatrix({from_row, from_col}, {to_row, to_col} = dimension)
+       when is_tuple(dimension) do
+    {to_row - from_row + 1, to_col - from_col + 1}
+  end
+
+  defp dimension_of_submatrix(_index, dimension) do
+    {dimension, dimension}
+  end
+
+  defp is_row_ok?(matrix, [hd | _] = row) when is_list(row) and is_number(hd) do
+    Result.ok(matrix)
+  end
+
+  defp is_row_ok?(_matrix, _row) do
+    Result.error("Input row (or column) vector must be only list of numbers!")
+  end
+
+  defp is_all_row_numbers_ok?(matrix, row_list, vec \\ :row) do
+    is_all_ok? =
+      row_list
+      |> Enum.map(fn r -> 0 <= r end)
+      |> Enum.find_index(fn r -> r == false end)
+
+    if is_all_ok? == nil do
+      Result.ok(matrix)
+    else
+      Result.error("List of #{Atom.to_string(vec)} numbers must be greater or equal to zero!")
+    end
+  end
+
+  defp is_index_ok?(matrix, ind)
+       when is_tuple(ind) and tuple_size(ind) == 2 and is_integer(elem(ind, 0)) and
+              0 <= elem(ind, 0) and is_integer(elem(ind, 1)) and 0 <= elem(ind, 1) do
+    Result.ok(matrix)
+  end
+
+  defp is_index_ok?(_matrix, _index) do
+    Result.error("The index must be in the form {m, n} where 0 <= m and 0 <= n !")
+  end
+
+  defp is_non_neg_integer?(matrix, num) when is_integer(num) and 0 <= num do
+    Result.ok(matrix)
+  end
+
+  defp is_non_neg_integer?(_matrix, num) when is_number(num) do
+    Result.error("The integer number must be greater or equal to zero!")
+  end
+
+  defp is_positive_integer?(matrix, num) when is_integer(num) and 0 < num do
+    Result.ok(matrix)
+  end
+
+  defp is_positive_integer?(_matrix, num) when is_number(num) do
+    Result.error("The integer number must be positive, i.e. n > 0 !")
   end
 end
