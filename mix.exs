@@ -35,7 +35,7 @@ defmodule MatrixReloaded.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:result, "~> 1.1"},
+      {:result, "~> 1.3.0"},
       {:ex_maybe, "~> 1.0"},
       {:ex_doc, "~> 0.19", only: :dev},
       {:credo, "~> 0.9", only: [:dev, :test]},

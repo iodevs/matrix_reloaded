@@ -32,4 +32,4 @@ be found at [https://hexdocs.pm/matrix_reloaded](https://hexdocs.pm/matrix_reloa
 
 
 ## License
-[![MIT](https://img.shields.io/packagist/l/doctrine/orm.svg)](https://github.com/iodevs/matrix_reloaded/blob/master/LICENSE)
+[![MIT](https://img.shields.io/packagist/l/doctrine/orm.svg)](LICENSE)

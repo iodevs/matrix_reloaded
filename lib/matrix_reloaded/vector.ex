@@ -154,7 +154,7 @@ defmodule MatrixReloaded.Vector do
   Scalar product of two a row vectors. These two vectors must have a same size.
   Otherwise you get an error message.
 
-  Returns result, it means either tuple of {:ok, number} or {:error, "msg"}.
+  Returns result, it means either tuple of `{:ok, number}` or `{:error, "msg"}`.
 
   ## Examples
 
