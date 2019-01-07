@@ -3,12 +3,66 @@
 
 
 This a library is focusing only on updating, rearranging, getting/dropping
-row/column of a matrix. Also contains a few matrix operations like addition,
-subtraction or multiplication. Anyway if you need make fast operations on
-matrices, please use [Matrex](https://hexdocs.pm/matrex/Matrex.html) library.
+  row/column of a matrix. Also contains a few matrix operations like addition,
+  subtraction or multiplication. Anyway if you need make fast operations on
+  matrices, please use [Matrex](https://hexdocs.pm/matrex/Matrex.html) library.
 
+  Each matrix is represented as a "list of lists" and most functions return
+  [Result](https://hexdocs.pm/result/api-reference.html). It means either tuple
+  of `{:ok, element}` or `{:error, "msg"}` where `element` is type,
+  (see module Matrix).
 
-## TODO: add example
+  Numbering of row and column of matrix starts from `0` and goes to `m - 1`
+  and `n - 1` where `{m, n}` is dimension (size) of matrix. Similarly for
+  a row or column vector.
+
+  ## Examples:
+```elixir
+iex> alias MatrixReloaded.Matrix
+
+iex> up = Matrix.diag([2, 2, 2], 1)
+iex> down = Matrix.diag([2, 2, 2], -1)
+iex> diag = Matrix.diag([3, 3, 3, 3])
+iex> band_mat = Result.and_then_x([up, down], &Matrix.add(&1, &2))
+iex> band_mat = Result.and_then_x([band_mat, diag], &Matrix.add(&1, &2))
+{:ok,
+  [
+    [3, 2, 0, 0],
+    [2, 3, 2, 0],
+    [0, 2, 3, 2],
+    [0, 0, 2, 3]
+  ]
+}
+
+iex> ones = Matrix.new(2, 1)
+iex> mat = Result.and_then_x([band_mat, ones], &Matrix.update(&1, &2, {1, 1}))
+{:ok,
+  [
+    [3, 2, 0, 0],
+    [2, 1, 1, 0],
+    [0, 1, 1, 2],
+    [0, 0, 2, 3]
+  ]
+}
+
+iex> mat |> Result.and_then(&Matrix.get_row(&1, 4))
+iex>
+{:error, "You can not get row from the matrix. The row number 4 is outside of matrix!"}
+
+iex> mat |> Result.and_then(&Matrix.get_row(&1, 3))
+iex>
+{:ok, [3, 2, 0, 0]}
+
+iex(4)> mat |> Result.and_then(&Matrix.drop_col(&1, 3))
+{:ok,
+  [
+    [3, 2, 0],
+    [2, 3, 2],
+    [0, 2, 3],
+    [0, 0, 2]
+  ]
+}
+```
 
 
 ## Installation

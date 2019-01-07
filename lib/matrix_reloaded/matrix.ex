@@ -14,7 +14,7 @@ defmodule MatrixReloaded.Matrix do
   @type submatrix :: number | Vector.t() | t()
 
   @doc """
-  Create a new matrix of the specified size. In case of positive number you get
+  Creates a new matrix of the specified size. In case of positive number you get
   a squared matrix, for tuple `{m, n}` you get a rectangular matrix. For negative
   values you get an error message. All elements of the matrix are filled with the
   default value 0. This value can be changed.
@@ -33,42 +33,30 @@ defmodule MatrixReloaded.Matrix do
   @spec new(dimension, number) :: Result.t(String.t(), t())
   def new(dimension, val \\ 0)
 
-  def new(dim, _val) when 2 != tuple_size(dim) do
-    Result.error(
-      "The size of matrix must be in the form {m, n} where integers are m > 0 and n > 0!"
-    )
+  def new(dim, val) when is_tuple(dim) do
+    dim
+    |> is_dimension_ok?()
+    |> Result.map(fn {rows, cols} ->
+      for(
+        _r <- 1..rows,
+        do: make_row(cols, val)
+      )
+    end)
   end
 
-  def new({rows, cols} = dim, val)
-      when is_tuple(dim) and tuple_size(dim) == 2 and is_integer(elem(dim, 0)) and
-             0 <= elem(dim, 0) and is_integer(elem(dim, 1)) and 0 <= elem(dim, 1) do
-    for(
-      _r <- 1..rows,
-      do: make_row(cols, val)
-    )
-    |> Result.ok()
-  end
-
-  def new({rows, cols}, _val) do
-    Result.error(
-      "The size {#{rows}, #{cols}} of matrix must be in the form {m, n} where m, n are positive integers!"
-    )
-  end
-
-  def new(row, val) when is_integer(row) and 0 < row do
-    for(
-      _r <- 1..row,
-      do: make_row(row, val)
-    )
-    |> Result.ok()
-  end
-
-  def new(_row, _val) do
-    Result.error("Dimension of squared matrix must be positive integer!")
+  def new(dim, val) do
+    dim
+    |> is_dimension_ok?()
+    |> Result.map(fn row ->
+      for(
+        _r <- 1..row,
+        do: make_row(row, val)
+      )
+    end)
   end
 
   @doc """
-  Addition of two matrices. Sizes (dimensions) of both matrices must be same.
+  Summation of two matrices. Sizes (dimensions) of both matrices must be same.
   Otherwise you get an error message.
 
   Returns result, it means either tuple of `{:ok, matrix}` or `{:error, "msg"}`.
@@ -221,10 +209,11 @@ defmodule MatrixReloaded.Matrix do
   end
 
   @doc """
-  Updates the matrix by given a submatrix. The position of submatrix inside matrix
-  is given by index `{num_row, num_col}` and dimension of submatrix. Size of
-  submatrix must be less than or equal to size of matrix. Otherwise you get an error message.
-  The values of indices start from `0` to `matrix row size - 1`. Similarly for `col` size.
+  Updates the matrix by given a submatrix. The position of submatrix inside
+  matrix is given by index `{row_num, col_num}` and dimension of submatrix.
+  Size of submatrix must be less than or equal to size of matrix. Otherwise
+  you get an error message. The values of indices start from `0` to `matrix row size - 1`.
+  Similarly for `col` size.
 
   Returns result, it means either tuple of `{:ok, matrix}` or `{:error, "msg"}`.
 
@@ -255,7 +244,7 @@ defmodule MatrixReloaded.Matrix do
 
   @doc """
   Updates the matrix by given a number. The position of element in matrix
-  which you want to change is given by tuple `{num_row, num_col}`.
+  which you want to change is given by tuple `{row_num, col_num}`.
 
   Returns result, it means either tuple of `{:ok, matrix}` or `{:error, "msg"}`.
 
@@ -282,7 +271,7 @@ defmodule MatrixReloaded.Matrix do
 
   @doc """
   Updates row in the matrix by given a row vector (list) of numbers. The row which
-  you want to change is given by tuple `{num_row, num_col}`. Both values are non
+  you want to change is given by tuple `{row_num, col_num}`. Both values are non
   negative integers.
 
   Returns result, it means either tuple of `{:ok, matrix}` or `{:error, "msg"}`.
@@ -311,9 +300,9 @@ defmodule MatrixReloaded.Matrix do
   end
 
   @doc """
-  Updates column in the matrix by given a column vector (list) of numbers.
-  The column which you want to change is given by tuple `{num_row, num_col}`.
-  Both values are non negative integers.
+  Updates column in the matrix by given a column vector. The column which you
+  want to change is given by tuple `{row_num, col_num}`. Both values are non
+  negative integers.
 
   Returns result, it means either tuple of `{:ok, matrix}` or `{:error, "msg"}`.
 
@@ -370,8 +359,8 @@ defmodule MatrixReloaded.Matrix do
   end
 
   @doc """
-  Get a submatrix from the matrix. By index you can select a submatrix. Dimension of
-  submatrix is given by positive number (result then will be square matrix) or tuple
+  Gets a submatrix from the matrix. By index you can select a submatrix. Dimension of
+  submatrix is given by positive number (result then will be a square matrix) or tuple
   of two positive numbers (you get then a rectangular matrix).
 
   Returns result, it means either tuple of `{:ok, matrix}` or `{:error, "msg"}`.
@@ -409,7 +398,7 @@ defmodule MatrixReloaded.Matrix do
   end
 
   @doc """
-  Get a element from the matrix. By index you can select an element.
+  Gets an element from the matrix. By index you can select an element.
 
   Returns result, it means either tuple of `{:ok, number}` or `{:error, "msg"}`.
 
@@ -431,7 +420,8 @@ defmodule MatrixReloaded.Matrix do
   end
 
   @doc """
-  Get a whole row from the matrix. By row number you can select the row which you want.
+  Gets a whole row from the matrix. By row number you can select the row which
+  you want.
 
   Returns result, it means either tuple of `{:ok, number}` or `{:error, "msg"}`.
 
@@ -454,7 +444,8 @@ defmodule MatrixReloaded.Matrix do
   end
 
   @doc """
-  Get a part row from the matrix. By index you can select the row which you want.
+  Gets a part row from the matrix. By index and positive number you can select
+  the row and elements which you want.
 
   Returns result, it means either tuple of `{:ok, number}` or `{:error, "msg"}`.
 
@@ -478,7 +469,7 @@ defmodule MatrixReloaded.Matrix do
   end
 
   @doc """
-  Get a whole column from the matrix. By column number you can select the column
+  Gets a whole column from the matrix. By column number you can select the column
   which you want.
 
   Returns result, it means either tuple of `{:ok, number}` or `{:error, "msg"}`.
@@ -504,8 +495,8 @@ defmodule MatrixReloaded.Matrix do
   end
 
   @doc """
-  Get a part column from the matrix. By column number you can select the column
-  which you want.
+  Gets a part column from the matrix. By index and positive number you can select
+  the column and elements which you want.
 
   Returns result, it means either tuple of `{:ok, matrix}` or `{:error, "msg"}`.
 
@@ -532,8 +523,8 @@ defmodule MatrixReloaded.Matrix do
 
   @doc """
   Creates a square diagonal matrix with the elements of vector on the main diagonal
-  or on lower/upper bidiagonal if diagonal number `k` is `k < 0` or `0 < k`. This number
-  `k` must be integer.
+  or on lower/upper bidiagonal if diagonal number `k` is `k < 0` or `0 < k`.
+  This number `k` must be integer.
 
   Returns result, it means either tuple of `{:ok, matrix}` or `{:error, "msg"}`.
 
@@ -662,7 +653,7 @@ defmodule MatrixReloaded.Matrix do
   end
 
   @doc """
-  Drop the row or list of rows from the matrix. The row number (or row numbers)
+  Drops the row or list of rows from the matrix. The row number (or row numbers)
   must be positive integer.
 
   Returns result, it means either tuple of `{:ok, matrix}` or `{:error, "msg"}`.
@@ -702,7 +693,7 @@ defmodule MatrixReloaded.Matrix do
   end
 
   @doc """
-  Drop the column or list of columns from the matrix. The column number
+  Drops the column or list of columns from the matrix. The column number
   (or column numbers) must be positive integer.
 
   Returns result, it means either tuple of `{:ok, matrix}` or `{:error, "msg"}`.
@@ -749,7 +740,7 @@ defmodule MatrixReloaded.Matrix do
   end
 
   @doc """
-  Concatenate matrices horizontally. Both matrices must have same rows dimension.
+  Concatenate matrices horizontally. Both matrices must have same a row dimension.
 
   Returns result, it means either tuple of `{:ok, matrix}` or `{:error, "msg"}`.
 
@@ -782,7 +773,7 @@ defmodule MatrixReloaded.Matrix do
   end
 
   @doc """
-  Concatenate matrices vertically. Both matrices must have same columns dimension.
+  Concatenate matrices vertically. Both matrices must have same a column dimension.
 
   Returns result, it means either tuple of `{:ok, matrix}` or `{:error, "msg"}`.
 
@@ -831,7 +822,7 @@ defmodule MatrixReloaded.Matrix do
   def size(matrix), do: {length(matrix), length(List.first(matrix))}
 
   @doc """
-  Save a matrix to csv file at a project root directory. Default name
+  Saves a matrix to csv file at a project root directory. Default name
   of csv file is `matrix.csv`. Or you can set a path to save dir and file name
   (e.g. `/tmp/matrix.csv`).
 
@@ -1152,6 +1143,27 @@ defmodule MatrixReloaded.Matrix do
     else
       Result.error("List of #{Atom.to_string(vec)} numbers must be greater or equal to zero!")
     end
+  end
+
+  defp is_dimension_ok?({rows, cols} = tpl)
+       when tuple_size(tpl) == 2 and is_integer(rows) and rows > 0 and is_integer(cols) and
+              cols > 0 do
+    Result.ok(tpl)
+  end
+
+  defp is_dimension_ok?({rows, cols}) do
+    Result.error(
+      "The size {#{rows}, #{cols}} of matrix must be in the form {m, n} where m, n are positive integers!"
+    )
+  end
+
+  defp is_dimension_ok?(dim)
+       when is_integer(dim) and 0 < dim do
+    Result.ok(dim)
+  end
+
+  defp is_dimension_ok?(_dim) do
+    Result.error("Dimension of squared matrix must be positive integer!")
   end
 
   defp is_index_ok?(matrix, ind)
