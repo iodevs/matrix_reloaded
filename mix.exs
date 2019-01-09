@@ -11,6 +11,7 @@ defmodule MatrixReloaded.MixProject do
       start_permanent: Mix.env() == :prod,
       description: "Library for matrix and vectors working...",
       deps: deps(),
+      package: package(),
       test_coverage: [tool: ExCoveralls],
       preferred_cli_env: [
         coveralls: :test,
@@ -41,6 +42,19 @@ defmodule MatrixReloaded.MixProject do
       {:credo, "~> 0.9", only: [:dev, :test]},
       {:excoveralls, "~> 0.10.3", only: :test},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false}
+    ]
+  end
+
+  defp package do
+    [
+      maintainers: [
+        "Jindrich K. Smitka <smitka.j@gmail.com>",
+        "Ondrej Tucek <ondrej.tucek@gmail.com>"
+      ],
+      licenses: ["BSD"],
+      links: %{
+        "GitHub" => "https://github.com/iodevs/matrix_reloaded"
+      }
     ]
   end
 
