@@ -70,7 +70,7 @@ defmodule MatrixReloaded do
 
       iex> mat |> Result.and_then(&Matrix.get_row(&1, 3))
       iex>
-      {:ok, [3, 2, 0, 0]}
+      {:ok, [0, 0, 2, 3]}
 
       iex(4)> mat |> Result.and_then(&Matrix.drop_col(&1, 3))
       {:ok,
