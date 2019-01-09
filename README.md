@@ -107,4 +107,4 @@ be found at [https://hexdocs.pm/matrix_reloaded](https://hexdocs.pm/matrix_reloa
 
 
 ## License
-[![MIT](https://img.shields.io/packagist/l/doctrine/orm.svg)](LICENSE)
+[![BSD](https://img.shields.io/badge/license-BSD-blue.svg)](LICENSE)
