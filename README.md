@@ -7,10 +7,10 @@ row/column of a matrix. Also contains a few matrix operations like addition,
 subtraction or multiplication. Anyway if you need make fast operations on
 matrices, please use [Matrex](https://hexdocs.pm/matrex/Matrex.html) library.
 
-Each matrix is represented as a "list of lists" and most functions return
+Each matrix is represented as a "list of lists" and functions return
 [Result](https://hexdocs.pm/result/api-reference.html). It means either tuple
-of `{:ok, element}` or `{:error, "msg"}` where `element` is type,
-(see module Matrix).
+of `{:ok, object}` or `{:error, "msg"}` where `object` is either `matrix` or
+`submatrix`, `vector` or `number`.
 
 Numbering of row and column of matrix starts from `0` and goes to `m - 1`
 and `n - 1` where `{m, n}` is dimension (size) of matrix. Similarly for
