@@ -3,18 +3,39 @@
 
 
 This a library is focusing only on updating, rearranging, getting/dropping
-  row/column of a matrix. Also contains a few matrix operations like addition,
-  subtraction or multiplication. Anyway if you need make fast operations on
-  matrices, please use [Matrex](https://hexdocs.pm/matrex/Matrex.html) library.
+row/column of a matrix. Also contains a few matrix operations like addition,
+subtraction or multiplication. Anyway if you need make fast operations on
+matrices, please use [Matrex](https://hexdocs.pm/matrex/Matrex.html) library.
 
-  Each matrix is represented as a "list of lists" and most functions return
-  [Result](https://hexdocs.pm/result/api-reference.html). It means either tuple
-  of `{:ok, element}` or `{:error, "msg"}` where `element` is type,
-  (see module Matrix).
+Each matrix is represented as a "list of lists" and most functions return
+[Result](https://hexdocs.pm/result/api-reference.html). It means either tuple
+of `{:ok, element}` or `{:error, "msg"}` where `element` is type,
+(see module Matrix).
 
-  Numbering of row and column of matrix starts from `0` and goes to `m - 1`
-  and `n - 1` where `{m, n}` is dimension (size) of matrix. Similarly for
-  a row or column vector.
+Numbering of row and column of matrix starts from `0` and goes to `m - 1`
+and `n - 1` where `{m, n}` is dimension (size) of matrix. Similarly for
+a row or column vector.
+
+In case of need, if you want to save your matrix to a file you can use package [CSVlixir](https://hexdocs.pm/csvlixir/api-reference.html) and then call function
+
+```elixir
+def save_csv(matrix, file_name \\ "matrix.csv") do
+  file_name
+  |> File.open([:write], fn file ->
+    matrix
+    |> CSVLixir.write()
+    |> Enum.each(&IO.write(file, &1))
+  end)
+end
+```
+
+For example, you can choose where to save your matrix (in our case it's a `tmp` directory)
+```elixir
+MatrixReloaded.Matrix.new(3, 1)
+|> Result.and_then(&MatrixReloaded.Matrix.save_csv(&1, "/tmp/matrix.csv"))
+# {:ok, :ok}
+```
+
 
   ## Examples:
 ```elixir

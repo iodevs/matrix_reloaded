@@ -16,6 +16,26 @@ defmodule MatrixReloaded do
   and `n - 1` where `{m, n}` is dimension (size) of matrix. Similarly for
   a row or column vector.
 
+  In case of need, if you want to save your matrix to a file you can use package [CSVlixir](https://hexdocs.pm/csvlixir/api-reference.html) and then call function
+
+  ```elixir
+  def save_csv(matrix, file_name \\\\ "matrix.csv") do
+  file_name
+    |> File.open([:write], fn file ->
+      matrix
+      |> CSVLixir.write()
+      |> Enum.each(&IO.write(file, &1))
+    end)
+  end
+  ```
+
+  For example, you can choose where to save your matrix (in our case it's a `tmp` directory)
+  ```elixir
+  MatrixReloaded.Matrix.new(3, 1)
+  |> Result.and_then(&MatrixReloaded.Matrix.save_csv(&1, "/tmp/matrix.csv"))
+  # {:ok, :ok}
+  ```
+
   ## Examples:
       iex> alias MatrixReloaded.Matrix
 
