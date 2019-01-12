@@ -48,7 +48,7 @@ defmodule MatrixReloaded.Vector do
 
   """
 
-  @spec col(pos_integer, number) :: [t()]
+  @spec col(pos_integer, number) :: Matrix.t()
   def col(size, val \\ 0) do
     val |> List.duplicate(size) |> Enum.chunk_every(1)
   end
@@ -65,7 +65,7 @@ defmodule MatrixReloaded.Vector do
       [1, 2, 3]
 
   """
-  @spec transpose(t()) :: t()
+  @spec transpose(t()) :: t() | Matrix.t()
   def transpose([hd | _] = vec) when is_list(hd) do
     List.flatten(vec)
   end
@@ -260,7 +260,7 @@ defmodule MatrixReloaded.Vector do
 
   """
 
-  @spec mult_by_num(t(), number) :: t()
+  @spec mult_by_num(t(), number) :: t() | Matrix.t()
   def mult_by_num([hd | _] = vec, val) when is_list(hd) do
     vec
     |> transpose()
