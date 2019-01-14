@@ -6,10 +6,9 @@ defmodule MatrixReloaded.Vector do
   functionality even for a column vectors you can use `transpose` function
   on row vector.
   """
-
   alias MatrixReloaded.Matrix
 
-  @type t :: list(number)
+  @type t :: [number]
 
   @doc """
   Create a row vector of the specified size. Default values of vector
@@ -48,7 +47,7 @@ defmodule MatrixReloaded.Vector do
 
   """
 
-  @spec col(pos_integer, number) :: Matrix.t()
+  @spec col(pos_integer, number) :: [t()]
   def col(size, val \\ 0) do
     val |> List.duplicate(size) |> Enum.chunk_every(1)
   end
@@ -65,7 +64,7 @@ defmodule MatrixReloaded.Vector do
       [1, 2, 3]
 
   """
-  @spec transpose(t()) :: t() | Matrix.t()
+  @spec transpose(t()) :: t() | [t()]
   def transpose([hd | _] = vec) when is_list(hd) do
     List.flatten(vec)
   end
@@ -260,7 +259,7 @@ defmodule MatrixReloaded.Vector do
 
   """
 
-  @spec mult_by_num(t(), number) :: t() | Matrix.t()
+  @spec mult_by_num(t(), number) :: t() | [t()]
   def mult_by_num([hd | _] = vec, val) when is_list(hd) do
     vec
     |> transpose()
