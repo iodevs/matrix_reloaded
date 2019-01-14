@@ -64,7 +64,7 @@ defmodule MatrixReloaded.Vector do
       [1, 2, 3]
 
   """
-  @spec transpose(t()) :: t() | [t()]
+  @spec transpose(t() | [t()]) :: t() | [t()]
   def transpose([hd | _] = vec) when is_list(hd) do
     List.flatten(vec)
   end
@@ -259,7 +259,7 @@ defmodule MatrixReloaded.Vector do
 
   """
 
-  @spec mult_by_num(t(), number) :: t() | [t()]
+  @spec mult_by_num(t() | [t()], number) :: t() | [t()]
   def mult_by_num([hd | _] = vec, val) when is_list(hd) do
     vec
     |> transpose()
