@@ -161,7 +161,7 @@ defmodule MatrixReloaded.Matrix do
       |> Enum.map(fn row1 ->
         matrix2
         |> transpose()
-        |> Result.and_then(&Enum.map(&1, fn row2 -> Vector.dot(row1, row2) end))
+        |> Enum.map(fn row2 -> Vector.dot(row1, row2) end)
       end)
       |> Enum.map(&Result.product(&1))
       |> Result.product()
@@ -320,7 +320,7 @@ defmodule MatrixReloaded.Matrix do
       }
 
   """
-  @spec update_col(t(), t(), index) :: Result.t(String.t(), t())
+  @spec update_col(t(), Vector.column(), index) :: Result.t(String.t(), t())
   def update_col(matrix, [hd | _] = submatrix, index)
       when is_list(submatrix) and length(hd) == 1 do
     update(matrix, submatrix, index)
@@ -367,8 +367,8 @@ defmodule MatrixReloaded.Matrix do
 
   ##  Example:
 
-      iex> mat = {:ok, [[0, 0, 0, 0], [0, 0, 1, 2], [0, 0, 3, 4], [0, 0, 0, 0]]}
-      iex> mat |> Result.and_then(&MatrixReloaded.Matrix.get_submatrix(&1, {1, 2}, 2))
+      iex> mat = [[0, 0, 0, 0], [0, 0, 1, 2], [0, 0, 3, 4], [0, 0, 0, 0]]
+      iex> MatrixReloaded.Matrix.get_submatrix(mat, {1, 2}, 2)
       {:ok,
         [
           [1, 2],
@@ -376,8 +376,8 @@ defmodule MatrixReloaded.Matrix do
         ]
       }
 
-      iex> mat = {:ok, [[0, 0, 0, 0], [0, 0, 0, 0], [0, 1, 2, 3], [0, 4, 5, 6]]}
-      iex> mat |> Result.and_then(&MatrixReloaded.Matrix.get_submatrix(&1, {2, 1}, {3, 3}))
+      iex> mat = [[0, 0, 0, 0], [0, 0, 0, 0], [0, 1, 2, 3], [0, 4, 5, 6]]
+      iex> MatrixReloaded.Matrix.get_submatrix(mat, {2, 1}, {3, 3})
       {:ok,
         [
           [1, 2, 3],
@@ -404,8 +404,8 @@ defmodule MatrixReloaded.Matrix do
 
   ##  Example:
 
-      iex> mat = {:ok, [[0, 0, 0, 0], [0, 0, 1, 2], [0, 0, 3, 4], [0, 0, 0, 0]]}
-      iex> mat |> Result.and_then(&MatrixReloaded.Matrix.get_element(&1, {2, 2}))
+      iex> mat = [[0, 0, 0, 0], [0, 0, 1, 2], [0, 0, 3, 4], [0, 0, 0, 0]]
+      iex> MatrixReloaded.Matrix.get_element(mat, {2, 2})
       {:ok, 3}
 
   """
@@ -427,8 +427,8 @@ defmodule MatrixReloaded.Matrix do
 
   ##  Example:
 
-      iex> mat = {:ok, [[0, 0, 0, 0], [0, 0, 1, 2], [0, 0, 3, 4], [0, 0, 0, 0]]}
-      iex> mat |> Result.and_then(&MatrixReloaded.Matrix.get_row(&1, 1))
+      iex> mat = [[0, 0, 0, 0], [0, 0, 1, 2], [0, 0, 3, 4], [0, 0, 0, 0]]
+      iex> MatrixReloaded.Matrix.get_row(mat, 1)
       {:ok, [0, 0, 1, 2]}
 
   """
@@ -451,8 +451,8 @@ defmodule MatrixReloaded.Matrix do
 
   ##  Example:
 
-      iex> mat = {:ok, [[0, 0, 0, 0], [0, 0, 1, 2], [0, 0, 3, 4], [0, 0, 0, 0]]}
-      iex> mat |> Result.and_then(&MatrixReloaded.Matrix.get_row(&1, {2, 1}, 2))
+      iex> mat = [[0, 0, 0, 0], [0, 0, 1, 2], [0, 0, 3, 4], [0, 0, 0, 0]]
+      iex> MatrixReloaded.Matrix.get_row(mat, {2, 1}, 2)
       {:ok, [0, 3]}
 
   """
@@ -476,18 +476,18 @@ defmodule MatrixReloaded.Matrix do
 
   ##  Example:
 
-      iex> mat = {:ok, [[0, 0, 0, 0], [0, 0, 1, 2], [0, 0, 3, 4], [0, 0, 0, 0]]}
-      iex> mat |> Result.and_then(&MatrixReloaded.Matrix.get_col(&1, 3))
+      iex> mat = [[0, 0, 0, 0], [0, 0, 1, 2], [0, 0, 3, 4], [0, 0, 0, 0]]
+      iex> MatrixReloaded.Matrix.get_col(mat, 3)
       {:ok, [[0], [2], [4], [0]]}
 
   """
-  @spec get_col(t(), non_neg_integer) :: Result.t(String.t(), t())
+  @spec get_col(t(), non_neg_integer) :: Result.t(String.t(), Vector.column())
   def get_col(matrix, col_num) do
     {rs, cs} = size(matrix)
 
     matrix
     |> is_non_neg_integer?(col_num)
-    |> Result.and_then(&transpose(&1))
+    |> Result.map(&transpose/1)
     |> Result.and_then(&is_row_num_at_matrix?(&1, {rs, cs}, col_num, :column))
     |> Result.map(&make_get_submatrix(&1, {col_num, 0}, {col_num, cs}))
     |> Result.map(&hd(&1))
@@ -502,19 +502,19 @@ defmodule MatrixReloaded.Matrix do
 
   ##  Example:
 
-      iex> mat = {:ok, [[0, 0, 0, 0], [0, 0, 1, 2], [0, 0, 3, 4], [0, 0, 0, 0]]}
-      iex> mat |> Result.and_then(&MatrixReloaded.Matrix.get_col(&1, {1, 2}, 2))
+      iex> mat = [[0, 0, 0, 0], [0, 0, 1, 2], [0, 0, 3, 4], [0, 0, 0, 0]]
+      iex> MatrixReloaded.Matrix.get_col(mat, {1, 2}, 2)
       {:ok, [[1], [3]]}
 
   """
-  @spec get_col(t(), index, non_neg_integer) :: Result.t(String.t(), t())
+  @spec get_col(t(), index, non_neg_integer) :: Result.t(String.t(), Vector.column())
   def get_col(matrix, {row_num, col_num} = index, num_of_el) do
     {rs, cs} = size(matrix)
 
     matrix
     |> is_index_ok?(index)
     |> Result.and_then(&is_positive_integer?(&1, num_of_el))
-    |> Result.and_then(&transpose(&1))
+    |> Result.map(&transpose/1)
     |> Result.and_then(&is_row_num_at_matrix?(&1, {cs, rs}, col_num, :column))
     |> Result.map(&make_get_submatrix(&1, {col_num, row_num}, {col_num, num_of_el}))
     |> Result.map(&hd(&1))
@@ -584,22 +584,19 @@ defmodule MatrixReloaded.Matrix do
 
   ##  Example:
 
-      iex> mat = {:ok, [[1,2,3], [4,5,6], [7,8,9]]}
-      iex> mat |> Result.and_then(&MatrixReloaded.Matrix.transpose(&1))
-      {:ok,
-        [
-          [1, 4, 7],
-          [2, 5, 8],
-          [3, 6, 9]
-        ]
-      }
+      iex> mat = [[1,2,3], [4,5,6], [7,8,9]]
+      iex> MatrixReloaded.Matrix.transpose(mat)
+      [
+        [1, 4, 7],
+        [2, 5, 8],
+        [3, 6, 9]
+      ]
 
   """
-  @spec transpose(t()) :: Result.t(String.t(), t())
+  @spec transpose(t()) :: t()
   def transpose(matrix) do
     matrix
     |> make_transpose()
-    |> Result.ok()
   end
 
   @doc """
@@ -609,47 +606,39 @@ defmodule MatrixReloaded.Matrix do
 
   ##  Example:
 
-      iex> mat = {:ok, [[1,2,3], [4,5,6], [7,8,9]]}
-      iex> mat |> Result.and_then(&MatrixReloaded.Matrix.flip_lr(&1))
-      {:ok,
-        [
-          [3, 2, 1],
-          [6, 5, 4],
-          [9, 8, 7]
-        ]
-      }
+      iex> mat = [[1,2,3], [4,5,6], [7,8,9]]
+      iex> MatrixReloaded.Matrix.flip_lr(mat)
+      [
+        [3, 2, 1],
+        [6, 5, 4],
+        [9, 8, 7]
+      ]
 
   """
-  @spec flip_lr(t()) :: Result.t(String.t(), t())
+  @spec flip_lr(t()) :: t()
   def flip_lr(matrix) do
     matrix
     |> Enum.map(fn row -> Enum.reverse(row) end)
-    |> Result.ok()
   end
 
   @doc """
   Flip rows of matrix in the up-down direction (i.e. about a horizontal axis).
 
-  Returns result, it means either tuple of `{:ok, matrix}` or `{:error, "msg"}`.
-
   ##  Example:
 
-      iex> mat = {:ok, [[1,2,3], [4,5,6], [7,8,9]]}
-      iex> mat |> Result.and_then(&MatrixReloaded.Matrix.flip_ud(&1))
-      {:ok,
-        [
-          [7, 8, 9],
-          [4, 5, 6],
-          [1, 2, 3]
-        ]
-      }
+      iex> mat = [[1,2,3], [4,5,6], [7,8,9]]
+      iex> MatrixReloaded.Matrix.flip_ud(mat)
+      [
+        [7, 8, 9],
+        [4, 5, 6],
+        [1, 2, 3]
+      ]
 
   """
-  @spec flip_ud(t()) :: Result.t(String.t(), t())
+  @spec flip_ud(t()) :: t()
   def flip_ud(matrix) do
     matrix
     |> Enum.reverse()
-    |> Result.ok()
   end
 
   @doc """
@@ -659,8 +648,8 @@ defmodule MatrixReloaded.Matrix do
   Returns result, it means either tuple of `{:ok, matrix}` or `{:error, "msg"}`.
 
   ##  Example:
-      iex> mat = {:ok, [[0, 0, 0, 0], [0, 0, 1, 2], [0, 0, 3, 4], [0, 0, 0, 0]]}
-      iex> mat |> Result.and_then(&MatrixReloaded.Matrix.drop_row(&1, 2))
+      iex> mat = [[0, 0, 0, 0], [0, 0, 1, 2], [0, 0, 3, 4], [0, 0, 0, 0]]
+      iex> MatrixReloaded.Matrix.drop_row(mat, 2)
       {:ok,
         [
           [0, 0, 0, 0],
@@ -669,8 +658,8 @@ defmodule MatrixReloaded.Matrix do
         ]
       }
 
-      iex> mat = {:ok, [[0, 0, 0, 0], [0, 0, 1, 2], [0, 0, 3, 4], [0, 0, 0, 0]]}
-      iex> mat |> Result.and_then(&MatrixReloaded.Matrix.drop_row(&1, [0, 3]))
+      iex> mat = [[0, 0, 0, 0], [0, 0, 1, 2], [0, 0, 3, 4], [0, 0, 0, 0]]
+      iex> MatrixReloaded.Matrix.drop_row(mat, [0, 3])
       {:ok,
         [
           [0, 0, 1, 2],
@@ -679,7 +668,7 @@ defmodule MatrixReloaded.Matrix do
       }
 
   """
-  @spec drop_row(t(), pos_integer | Vector.t()) :: Result.t(String.t(), t())
+  @spec drop_row(t(), non_neg_integer | [non_neg_integer]) :: Result.t(String.t(), t())
   def drop_row(matrix, rows) when is_list(rows) do
     matrix
     |> is_all_row_numbers_ok?(rows)
@@ -699,8 +688,8 @@ defmodule MatrixReloaded.Matrix do
   Returns result, it means either tuple of `{:ok, matrix}` or `{:error, "msg"}`.
 
   ##  Example:
-      iex> mat = {:ok, [[0, 0, 0, 0], [0, 0, 1, 2], [0, 0, 3, 4], [0, 0, 0, 0]]}
-      iex> mat |> Result.and_then(&MatrixReloaded.Matrix.drop_col(&1, 2))
+      iex> mat = [[0, 0, 0, 0], [0, 0, 1, 2], [0, 0, 3, 4], [0, 0, 0, 0]]
+      iex> MatrixReloaded.Matrix.drop_col(mat, 2)
       {:ok,
         [
           [0, 0, 0],
@@ -710,8 +699,8 @@ defmodule MatrixReloaded.Matrix do
         ]
       }
 
-      iex> mat = {:ok, [[0, 0, 0, 0], [0, 0, 1, 2], [0, 0, 3, 4], [0, 0, 0, 0]]}
-      iex> mat |> Result.and_then(&MatrixReloaded.Matrix.drop_col(&1, [0, 1]))
+      iex> mat = [[0, 0, 0, 0], [0, 0, 1, 2], [0, 0, 3, 4], [0, 0, 0, 0]]
+      iex> MatrixReloaded.Matrix.drop_col(mat, [0, 1])
       {:ok,
         [
           [0, 0],
@@ -722,21 +711,21 @@ defmodule MatrixReloaded.Matrix do
       }
 
   """
-  @spec drop_col(t(), pos_integer | Vector.t()) :: Result.t(String.t(), t())
+  @spec drop_col(t(), non_neg_integer | [non_neg_integer]) :: Result.t(String.t(), t())
   def drop_col(matrix, cols) when is_list(cols) do
     matrix
     |> transpose()
-    |> Result.and_then(&is_all_row_numbers_ok?(&1, cols))
+    |> is_all_row_numbers_ok?(cols)
     |> Result.and_then(&make_drop_rows(&1, cols, :column))
-    |> Result.and_then(&transpose(&1))
+    |> Result.map(&transpose/1)
   end
 
   def drop_col(matrix, col) do
     matrix
     |> transpose()
-    |> Result.and_then(&is_non_neg_integer?(&1, col))
+    |> is_non_neg_integer?(col)
     |> Result.and_then(&make_drop_row(&1, col, :column))
-    |> Result.and_then(&transpose(&1))
+    |> Result.map(&transpose/1)
   end
 
   @doc """
@@ -814,8 +803,8 @@ defmodule MatrixReloaded.Matrix do
 
   ## Example:
 
-      iex> MatrixReloaded.Matrix.new({3,4}) |> Result.and_then(&MatrixReloaded.Matrix.size(&1))
-      {3, 4}
+      iex> MatrixReloaded.Matrix.new({3,4}) |> Result.map(&MatrixReloaded.Matrix.size(&1))
+      {:ok, {3, 4}}
 
   """
   @spec size(t()) :: {pos_integer, pos_integer}

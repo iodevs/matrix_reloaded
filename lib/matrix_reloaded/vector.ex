@@ -9,6 +9,7 @@ defmodule MatrixReloaded.Vector do
   alias MatrixReloaded.Matrix
 
   @type t :: [number]
+  @type column() :: [[number]]
 
   @doc """
   Create a row vector of the specified size. Default values of vector
@@ -47,7 +48,7 @@ defmodule MatrixReloaded.Vector do
 
   """
 
-  @spec col(pos_integer, number) :: [t()]
+  @spec col(pos_integer, number) :: column()
   def col(size, val \\ 0) do
     val |> List.duplicate(size) |> Enum.chunk_every(1)
   end
@@ -64,7 +65,7 @@ defmodule MatrixReloaded.Vector do
       [1, 2, 3]
 
   """
-  @spec transpose(t() | [t()]) :: t() | [t()]
+  @spec transpose(t() | column()) :: column() | t()
   def transpose([hd | _] = vec) when is_list(hd) do
     List.flatten(vec)
   end
@@ -259,7 +260,7 @@ defmodule MatrixReloaded.Vector do
 
   """
 
-  @spec mult_by_num(t() | [t()], number) :: t() | [t()]
+  @spec mult_by_num(t() | column(), number) :: t() | column()
   def mult_by_num([hd | _] = vec, val) when is_list(hd) do
     vec
     |> transpose()
