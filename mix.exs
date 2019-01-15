@@ -5,7 +5,7 @@ defmodule MatrixReloaded.MixProject do
     [
       app: :matrix_reloaded,
       dialyzer: dialyzer_base() |> dialyzer_ptl(System.get_env("SEMAPHORE_CACHE_DIR")),
-      version: "1.0.2",
+      version: "2.0.0",
       elixir: "~> 1.7",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
