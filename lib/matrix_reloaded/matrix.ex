@@ -580,8 +580,6 @@ defmodule MatrixReloaded.Matrix do
   @doc """
   Transpose of matrix.
 
-  Returns result, it means either tuple of `{:ok, matrix}` or `{:error, "msg"}`.
-
   ##  Example:
 
       iex> mat = [[1,2,3], [4,5,6], [7,8,9]]
@@ -601,8 +599,6 @@ defmodule MatrixReloaded.Matrix do
 
   @doc """
   Flip columns of matrix in the left-right direction (i.e. about a vertical axis).
-
-  Returns result, it means either tuple of `{:ok, matrix}` or `{:error, "msg"}`.
 
   ##  Example:
 
@@ -645,7 +641,7 @@ defmodule MatrixReloaded.Matrix do
   Drops the row or list of rows from the matrix. The row number (or row numbers)
   must be positive integer.
 
-  Returns result, it means either tuple of `{:ok, matrix}` or `{:error, "msg"}`.
+  Returns matrix.
 
   ##  Example:
       iex> mat = [[0, 0, 0, 0], [0, 0, 1, 2], [0, 0, 3, 4], [0, 0, 0, 0]]
