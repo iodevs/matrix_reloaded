@@ -10,6 +10,7 @@ defmodule MatrixReloaded.MixProject do
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       description: "Library for matrix and vectors working...",
+      source_url: "https://github.com/iodevs/matrix_reloaded",
       deps: deps(),
       package: package(),
       test_coverage: [tool: ExCoveralls],
