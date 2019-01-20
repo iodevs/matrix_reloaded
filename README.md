@@ -94,7 +94,7 @@ by adding `matrix_reloaded` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:matrix_reloaded, "~> 2.0.0"}
+    {:matrix_reloaded, "~> 2.0.1"}
   ]
 end
 ```
