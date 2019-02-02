@@ -793,6 +793,78 @@ defmodule MatrixReloaded.Matrix do
   end
 
   @doc """
+  Reshape vector or matrix. The `row` and `col` numbers must be positive number.
+  By the `row` or `col` number you can change shape of matrix, respectively create
+  new from vector.
+
+  Returns result, it means either tuple of `{:ok, vector | matrix}` or `{:error, "msg"}`.
+
+  ## Example:
+      iex> 1..10 |> Enum.to_list |> MatrixReloaded.Matrix.reshape(5, 2)
+      {:ok,
+        [
+          [1, 2],
+          [3, 4],
+          [5, 6],
+          [7, 8],
+          [9, 10]
+        ]
+      }
+
+      iex> MatrixReloaded.Matrix.new({3,4}) |> Result.map(&MatrixReloaded.Matrix.reshape(&1, 2, 6))
+      {:ok,
+        [
+          [0, 0, 0, 0, 0, 0,],
+          [0, 0, 0, 0, 0, 0,]
+        ]
+      }
+
+  """
+  @spec reshape(Vector.t() | t(), pos_integer(), pos_integer()) ::
+          Result.t(String.t(), Vector.t()) | Result.t(String.t(), t())
+  def reshape([el | _] = vector, row, col)
+      when is_list(vector) and is_number(el) and
+             is_integer(row) and row > 0 and is_integer(col) and col == 1 do
+    vector
+    |> transpose()
+  end
+
+  def reshape([el | _] = vector, row, col)
+      when is_list(vector) and is_number(el) and
+             is_integer(row) and row == 1 and is_integer(col) and col > 0 do
+    vector
+  end
+
+  def reshape([el | _] = vector, row, col)
+      when is_list(vector) and is_number(el) and
+             is_integer(row) and row > 0 and is_integer(col) and col > 0 do
+    vector
+    |> is_reshapeable?(row, col)
+    |> Result.map(&Enum.chunk_every(&1, col))
+  end
+
+  def reshape([r | _] = matrix, row, col)
+      when is_list(matrix) and is_list(r) and
+             is_integer(row) and row == 1 and is_integer(col) and col > 0 do
+    matrix
+    |> is_reshapeable?(row, col)
+    |> Result.and_then(&List.flatten(&1))
+  end
+
+  def reshape([r | _] = matrix, row, col)
+      when is_list(matrix) and is_list(r) and
+             is_integer(row) and row > 0 and is_integer(col) and col > 0 do
+    matrix
+    |> is_reshapeable?(row, col)
+    |> Result.map(&List.flatten(&1))
+    |> Result.and_then(&Enum.chunk_every(&1, col))
+  end
+
+  def reshape(_matrix, row, col) when row < 2 and col < 2 do
+    Result.error("'row' and 'col' number must be positive integer number greater than 0!")
+  end
+
+  @doc """
   The size (dimensions) of the matrix.
 
   Returns tuple of {row_size, col_size}.
@@ -1144,5 +1216,30 @@ defmodule MatrixReloaded.Matrix do
 
   defp is_positive_integer?(_matrix, num) when is_number(num) do
     Result.error("The integer number must be positive, i.e. n > 0 !")
+  end
+
+  defp is_reshapeable?([el | _] = vector, row, col)
+       when is_list(vector) and is_number(el) and length(vector) == row * col do
+    Result.ok(vector)
+  end
+
+  defp is_reshapeable?([el | _] = vector, _row, _col)
+       when is_list(vector) and is_number(el) do
+    Result.error(
+      "It is not possible to reshape vector! The numbers of element of vector must be equal row * col."
+    )
+  end
+
+  defp is_reshapeable?([r | _] = matrix, row, col)
+       when is_list(matrix) and is_list(r) do
+    {rs, cs} = size(matrix)
+
+    if row * col == rs * cs do
+      Result.ok(matrix)
+    else
+      Result.error(
+        "It is not possible to reshape matrix! The numbers of element of matrix must be equal row * col."
+      )
+    end
   end
 end
