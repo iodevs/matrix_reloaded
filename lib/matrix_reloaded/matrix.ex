@@ -890,11 +890,11 @@ defmodule MatrixReloaded.Matrix do
       if i in from_row..(from_row + to_row - 1) do
         row
         |> Enum.with_index()
-        |> Enum.map(fn {_col, j} ->
+        |> Enum.map(fn {val, j} ->
           if j in from_col..(from_col + to_col - 1) do
             submatrix |> Enum.at(i - from_row) |> Enum.at(j - from_col)
           else
-            Enum.at(row, j)
+            val
           end
         end)
       else
