@@ -1006,11 +1006,11 @@ defmodule MatrixReloaded.Matrix do
 
   defp is_row_size_smaller_than_rows_of_matrix?(
          matrix,
-         {rs_mat, _cs_mat},
+         {_rs_mat, cs_mat},
          size_r,
          _method
        )
-       when size_r <= rs_mat do
+       when size_r <= cs_mat do
     Result.ok(matrix)
   end
 
