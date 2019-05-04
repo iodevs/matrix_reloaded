@@ -339,7 +339,7 @@ defmodule MatrixReloaded.Matrix do
       iex> mat = MatrixReloaded.Matrix.new(5)
       iex> sub_mat = MatrixReloaded.Matrix.new(2,1)
       iex> positions = [{0,0}, {3, 3}]
-      iex> MatrixReloaded.Matrix.update_map(mat, sub_mat, positions)
+      iex> [mat, sub_mat] |> Result.and_then_x(&MatrixReloaded.Matrix.update_map(&1, &2, positions))
       {:ok,
         [
           [1, 1, 0, 0, 0],
@@ -353,8 +353,8 @@ defmodule MatrixReloaded.Matrix do
   """
   @spec update_map(t(), submatrix, list(index)) :: Result.t(String.t(), t())
   def update_map(matrix, submatrix, position_indices) do
-    Enum.reduce(position_indices, matrix, fn position, acc ->
-      Result.and_then_x([acc, submatrix], &update(&1, &2, position))
+    Enum.reduce(position_indices, {:ok, matrix}, fn position, acc ->
+      Result.and_then(acc, &update(&1, submatrix, position))
     end)
   end
 
