@@ -1,5 +1,9 @@
 # MatrixReloaded
-[![Build Status](https://semaphoreci.com/api/v1/s-m-i-t-a/matrix_reloaded/branches/master/badge.svg)](https://semaphoreci.com/s-m-i-t-a/matrix_reloaded)
+[![Continuous Integration](https://github.com/iodevs/matrix_reloaded/workflows/Continuous%20Integration/badge.svg)](https://github.com/iodevs/matrix_reloaded/actions)
+[![Coverage Status](https://coveralls.io/repos/github/iodevs/matrix_reloaded/badge.svg?branch=master)](https://coveralls.io/github/iodevs/matrix_reloaded?branch=master)
+![GitHub top language](https://img.shields.io/github/languages/top/iodevs/matrix_reloaded)
+![Hex.pm](https://img.shields.io/hexpm/v/matrix_reloaded)
+![Hex.pm](https://img.shields.io/hexpm/dt/matrix_reloaded)
 
 
 This a library is focusing only on updating, rearranging, getting/dropping
