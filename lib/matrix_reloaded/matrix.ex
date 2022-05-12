@@ -936,9 +936,7 @@ defmodule MatrixReloaded.Matrix do
       )
     else
       Result.error(
-        "It is not possible drop all the #{Atom.to_string(vec)}s from matrix! Matrix has dimensions {#{
-          row_size
-        }, #{col_size}}."
+        "It is not possible drop all the #{Atom.to_string(vec)}s from matrix! Matrix has dimensions {#{row_size}, #{col_size}}."
       )
     end
   end
@@ -952,9 +950,7 @@ defmodule MatrixReloaded.Matrix do
       |> Result.ok()
     else
       Result.error(
-        "It is not possible drop the #{vec} #{row} from matrix! Numbering of #{vec}s begins from 0 to (matrix #{
-          vec
-        } size - 1)."
+        "It is not possible drop the #{vec} #{row} from matrix! Numbering of #{vec}s begins from 0 to (matrix #{vec} size - 1)."
       )
     end
   end
@@ -1049,9 +1045,7 @@ defmodule MatrixReloaded.Matrix do
          method
        ) do
     Result.error(
-      "You can not #{Atom.to_string(method)} the matrix on given position {#{from_row}, #{
-        from_col
-      }}. The element is outside of matrix!"
+      "You can not #{Atom.to_string(method)} the matrix on given position {#{from_row}, #{from_col}}. The element is outside of matrix!"
     )
   end
 
@@ -1082,9 +1076,7 @@ defmodule MatrixReloaded.Matrix do
          method
        ) do
     Result.error(
-      "You can not #{Atom.to_string(method)} the matrix on given position {#{from_row}, #{
-        from_col
-      }}. The submatrix is outside of matrix!"
+      "You can not #{Atom.to_string(method)} the matrix on given position {#{from_row}, #{from_col}}. The submatrix is outside of matrix!"
     )
   end
 
@@ -1115,9 +1107,7 @@ defmodule MatrixReloaded.Matrix do
          method
        ) do
     Result.error(
-      "You can not #{Atom.to_string(method)} row in the matrix on given position {#{from_row}, #{
-        from_col
-      }}. A part of row is outside of matrix!"
+      "You can not #{Atom.to_string(method)} row in the matrix on given position {#{from_row}, #{from_col}}. A part of row is outside of matrix!"
     )
   end
 
@@ -1135,9 +1125,7 @@ defmodule MatrixReloaded.Matrix do
          vec
        ) do
     Result.error(
-      "You can not get #{Atom.to_string(vec)} from the matrix. The #{Atom.to_string(vec)} number #{
-        row_num
-      } is outside of matrix!"
+      "You can not get #{Atom.to_string(vec)} from the matrix. The #{Atom.to_string(vec)} number #{row_num} is outside of matrix!"
     )
   end
 
