@@ -4,7 +4,7 @@ defmodule MatrixReloaded.MixProject do
   def project do
     [
       app: :matrix_reloaded,
-      dialyzer: dialyzer_base() |> dialyzer_ptl(System.get_env("SEMAPHORE_CACHE_DIR")),
+      dialyzer: dialyzer(),
       version: "2.2.1",
       elixir: "~> 1.7",
       elixirc_paths: elixirc_paths(Mix.env()),
@@ -37,12 +37,12 @@ defmodule MatrixReloaded.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:result, "~> 1.3.0"},
+      {:credo, "~> 1.6", only: [:dev, :test]},
+      {:dialyxir, "~> 1.1", only: [:dev], runtime: false},
+      {:ex_doc, "~> 0.28", only: :dev},
       {:ex_maybe, "~> 1.0"},
-      {:ex_doc, "~> 0.19", only: :dev},
-      {:credo, "~> 0.9", only: [:dev, :test]},
-      {:excoveralls, "~> 0.10.3", only: :test},
-      {:dialyxir, "~> 0.5", only: [:dev], runtime: false}
+      {:excoveralls, "~> 0.14", only: :test},
+      {:result, "~> 1.7"}
     ]
   end
 
@@ -59,9 +59,10 @@ defmodule MatrixReloaded.MixProject do
     ]
   end
 
-  defp dialyzer_base() do
+  defp dialyzer() do
     [
-      plt_add_deps: :transitive,
+      plt_add_apps: [:mix, :ex_unit],
+      plt_file: {:no_warn, "priv/plts/dialyzer.plt"},
       ignore_warnings: "dialyzer.ignore-warnings",
       flags: [
         :unmatched_returns,
@@ -70,40 +71,5 @@ defmodule MatrixReloaded.MixProject do
         :no_opaque
       ]
     ]
-  end
-
-  defp dialyzer_ptl(base, nil) do
-    base
-  end
-
-  defp dialyzer_ptl(base, path) do
-    base ++
-      [
-        plt_core_path: path,
-        plt_file:
-          Path.join(
-            path,
-            "dialyxir_erlang-#{otp_vsn()}_elixir-#{System.version()}_deps-dev.plt"
-          )
-      ]
-  end
-
-  defp otp_vsn() do
-    major = :erlang.system_info(:otp_release) |> List.to_string()
-    vsn_file = Path.join([:code.root_dir(), "releases", major, "OTP_VERSION"])
-
-    try do
-      {:ok, contents} = File.read(vsn_file)
-      String.split(contents, "\n", trim: true)
-    else
-      [full] ->
-        full
-
-      _ ->
-        major
-    catch
-      :error, _ ->
-        major
-    end
   end
 end
