@@ -5,7 +5,7 @@ defmodule MatrixReloaded.MixProject do
     [
       app: :matrix_reloaded,
       dialyzer: dialyzer(),
-      version: "2.2.1",
+      version: "2.3.0",
       elixir: "~> 1.7",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
