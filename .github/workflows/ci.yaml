@@ -44,9 +44,9 @@ jobs:
         id: plts-cache
         with:
           path: priv/plts
-          key: ${{ runner.os }}-erlef-dialyzer-${{ env.OTP_VERSION }}-${{ env.ELIXIR_VERSION }}-${{ hashFiles(format('{0}{1}', github.workspace, '/mix.lock')) }}
+          key: ${{ runner.os }}-erlef-dialyzer-v2-${{ env.OTP_VERSION }}-${{ env.ELIXIR_VERSION }}-${{ hashFiles(format('{0}{1}', github.workspace, '/mix.lock')) }}
           restore-keys: |
-            ${{ runner.os }}-erlef-dialyzer-
+            ${{ runner.os }}-erlef-dialyzer-v2-
 
       - name: install dependencies
         run: mix deps.get
