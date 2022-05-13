@@ -4,8 +4,8 @@ on: push
 
 env:
   # OS: ubuntu-latest
-  OTP_VERSION: 21.0
-  ELIXIR_VERSION: 1.7
+  OTP_VERSION: 24.0
+  ELIXIR_VERSION: 1.13
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   MIX_ENV: test
 
@@ -31,6 +31,7 @@ jobs:
           key: ${{ runner.os }}-mix-${{ hashFiles(format('{0}{1}', github.workspace, '/mix.lock')) }}
           restore-keys: |
             ${{ runner.os }}-mix-
+
       - uses: actions/cache@v1
         id: build-cache
         with:
@@ -38,6 +39,7 @@ jobs:
           key: ${{ runner.os }}-build-${{ env.OTP_VERSION }}-${{ env.ELIXIR_VERSION }}-${{ hashFiles(format('{0}{1}', github.workspace, '/mix.lock')) }}
           restore-keys: |
             ${{ runner.os }}-build-
+
       - uses: actions/cache@v1
         id: plts-cache
         with:
@@ -45,6 +47,7 @@ jobs:
           key: ${{ runner.os }}-erlef-dialyzer-${{ env.OTP_VERSION }}-${{ env.ELIXIR_VERSION }}-${{ hashFiles(format('{0}{1}', github.workspace, '/mix.lock')) }}
           restore-keys: |
             ${{ runner.os }}-erlef-dialyzer-
+
       - name: install dependencies
         run: mix deps.get
 
