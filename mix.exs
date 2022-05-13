@@ -38,7 +38,7 @@ defmodule MatrixReloaded.MixProject do
   defp deps do
     [
       {:credo, "~> 1.6", only: [:dev, :test]},
-      {:dialyxir, "~> 1.1", only: [:dev], runtime: false},
+      {:dialyxir, "~> 1.1", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.28", only: :dev},
       {:ex_maybe, "~> 1.0"},
       {:excoveralls, "~> 0.14", only: :test},
