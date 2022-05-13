@@ -22,12 +22,19 @@ erl_crash.dump
 # Ignore package tarball (built via "mix hex.build").
 matrix_reloaded-*.tar
 
+# Ignore dialyzer tables
+/priv/plts/*.plt
+/priv/plts/*.plt.hash
 
 .envs
+.env/
 .vimrc
+.vscode/
 matrix.csv
 
 tags
+tags.*
+*.tags
 .projections.json
 
 .elixir_ls/
